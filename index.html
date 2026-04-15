@@ -201,6 +201,11 @@ select:focus{border-color:var(--blue)}
 .bank-card-rate{font-size:11px;color:var(--text2)}
 .bank-card-rate b{color:var(--blue)}
 
+/* AI PROVIDER TABS */
+.ai-prov-btn{flex:1;padding:8px 6px;border-radius:7px;border:none;background:transparent;color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px}
+.ai-prov-btn.active{background:var(--bg2);color:var(--text);box-shadow:0 1px 4px var(--shadow)}
+.ai-prov-btn:hover:not(.active){background:rgba(255,255,255,.04)}
+
 /* AI */
 .ai-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:12px;font-size:12px;line-height:1.9;white-space:pre-wrap;color:var(--text);min-height:70px}
 .api-input-wrap{background:var(--info-bg);border:1px solid var(--info-border);border-radius:8px;padding:13px;margin-bottom:12px}
@@ -234,11 +239,60 @@ select:focus{border-color:var(--blue)}
 footer{text-align:center;padding:16px 16px 28px;font-size:11px;color:var(--text3);line-height:1.7;max-width:740px;margin:0 auto}
 footer a{color:var(--blue);text-decoration:none}
 
-/* SCREENSHOT OVERLAY */
+/* WELCOME SCREEN */
+#welcomeScreen{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;transition:opacity .4s}
+#welcomeScreen.fade-out{opacity:0;pointer-events:none}
+.wlc-badge{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);background:var(--info-bg);border:1px solid var(--info-border);border-radius:99px;padding:4px 14px;margin-bottom:18px}
+.wlc-title{font-size:clamp(22px,5vw,34px);font-weight:700;letter-spacing:-.02em;text-align:center;line-height:1.25;margin-bottom:8px}
+.wlc-sub{font-size:13px;color:var(--text2);text-align:center;margin-bottom:36px}
+.wlc-cards{display:grid;grid-template-columns:1fr;gap:12px;width:100%;max-width:460px}
+.wlc-card{background:var(--bg2);border:1.5px solid var(--border);border-radius:16px;padding:20px 22px;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:16px;text-align:left}
+.wlc-card:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:0 8px 24px var(--shadow)}
+.wlc-icon{font-size:28px;flex-shrink:0;width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.wlc-icon.blue{background:var(--info-bg)}.wlc-icon.teal{background:var(--good-bg)}.wlc-icon.amber{background:var(--warn-bg)}
+.wlc-card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:3px}
+.wlc-card-desc{font-size:12px;color:var(--text2);line-height:1.55}
+.wlc-tag{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;margin-top:5px}
+.wlc-tag.free{background:var(--good-bg);color:var(--teal)}.wlc-tag.new{background:rgba(167,139,250,.15);color:var(--purple)}
+.wlc-footer{margin-top:24px;font-size:11px;color:var(--text3);text-align:center}
+
 .screenshot-saving{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px 28px;font-size:13px;color:var(--text);z-index:9999;box-shadow:0 8px 32px var(--shadow);display:none;text-align:center}
 </style>
 </head>
 <body>
+
+<!-- ===== WELCOME SCREEN ===== -->
+<div id="welcomeScreen">
+  <div class="wlc-badge">Finance Calculator by raf</div>
+  <h1 class="wlc-title">오늘 무엇을<br>계산해볼까요?</h1>
+  <p class="wlc-sub">원하는 기능을 선택하면 바로 시작해요</p>
+  <div class="wlc-cards">
+    <div class="wlc-card" onclick="enterApp('invest')">
+      <div class="wlc-icon blue">🎯</div>
+      <div>
+        <div class="wlc-card-title">목표금액 시뮬레이터</div>
+        <div class="wlc-card-desc">예금·주식·코인 합산으로 목표를 얼마나 빨리 달성할 수 있는지 계산해요. 필요 적립액 자동 계산도 가능해요.</div>
+      </div>
+    </div>
+    <div class="wlc-card" onclick="enterApp('mortgage')">
+      <div class="wlc-icon teal">🏠</div>
+      <div>
+        <div class="wlc-card-title">부동산 대출 계산기</div>
+        <div class="wlc-card-desc">LTV·DSR 기준으로 내가 받을 수 있는 대출 한도, 월 상환액, 이자 총액을 한눈에 확인해요.</div>
+        <span class="wlc-tag free">청약점수 · 전월세전환 포함</span>
+      </div>
+    </div>
+    <div class="wlc-card" onclick="enterApp('realty')">
+      <div class="wlc-icon amber">✨</div>
+      <div>
+        <div class="wlc-card-title">AI 맞춤 지역 추천</div>
+        <div class="wlc-card-desc">내 예산과 조건을 입력하면 Gemini·ChatGPT·Claude 중 원하는 AI가 부동산 지역을 추천해줘요.</div>
+        <span class="wlc-tag new">AI 3종 선택 가능</span>
+      </div>
+    </div>
+  </div>
+  <div class="wlc-footer">언제든 상단 탭으로 다른 기능으로 이동할 수 있어요</div>
+</div>
 
 <div class="topbar">
   <div style="font-size:13px;font-weight:600;color:var(--text)">재테크 계산기</div>
@@ -255,9 +309,9 @@ footer a{color:var(--blue);text-decoration:none}
 </header>
 
 <div class="tabs">
-  <button class="tab active" onclick="switchTab('invest',this)">🎯 목표금액 시뮬레이터</button>
-  <button class="tab" onclick="switchTab('mortgage',this)">🏠 부동산 대출 계산기</button>
-  <button class="tab" onclick="switchTab('realty',this)">✨ AI 맞춤 지역 추천</button>
+  <button class="tab active" data-tab="invest" onclick="switchTab('invest',this)">🎯 목표금액 시뮬레이터</button>
+  <button class="tab" data-tab="mortgage" onclick="switchTab('mortgage',this)">🏠 부동산 대출 계산기</button>
+  <button class="tab" data-tab="realty" onclick="switchTab('realty',this)">✨ AI 맞춤 지역 추천</button>
 </div>
 
 <div class="container" id="mainContent">
@@ -266,7 +320,7 @@ footer a{color:var(--blue);text-decoration:none}
 <div id="page-invest" class="page active">
   <div class="card">
     <div class="card-title">목표 설정</div>
-    <div class="srow"><span class="slab">목표 금액</span><input type="range" id="goal" min="10000000" max="2000000000" step="5000000" value="100000000"><span class="sval" id="goalV">1억 원</span></div>
+    <div class="srow"><span class="slab">목표 금액</span><input type="range" id="goal" min="10000000" max="2000000000" step="5000000" value="50000000"><span class="sval" id="goalV">5,000만 원</span></div>
     <div style="display:flex;align-items:center;gap:8px;margin-top:4px;margin-bottom:2px">
       <span style="font-size:12px;color:var(--text2);min-width:120px;flex-shrink:0">직접 입력 (만 원)</span>
       <input type="number" id="goalDirect" placeholder="예: 15000 (1억5천만)" min="100" max="200000" step="100"
@@ -311,37 +365,39 @@ footer a{color:var(--blue);text-decoration:none}
       <div id="reqHint" class="hint-box" style="margin-top:4px"></div>
     </div>
   </div>
-    <div class="srow"><span class="slab">현재 예금 잔액</span><input type="range" id="depBal" min="0" max="500000000" step="1000000" value="5000000"><span class="sval" id="depBalV">500만 원</span></div>
+  <div class="card">
+    <div class="card-title blue">적립식 정기예금</div>
+    <div class="srow"><span class="slab">현재 예금 잔액</span><input type="range" id="depBal" min="0" max="500000000" step="1000000" value="0"><span class="sval" id="depBalV">0 원</span></div>
     <div class="srow">
       <span class="slab">예금 시작월</span>
       <div class="ym-wrap"><select id="depY"></select><span class="ym-label">년</span><select id="depM"></select><span class="ym-label">월</span></div>
       <span class="elapsed-badge" id="depElapsed">-</span>
     </div>
-    <div class="srow"><span class="slab">월 납입액</span><input type="range" id="dm" min="100000" max="10000000" step="100000" value="300000"><span class="sval" id="dmV">30만 원</span></div>
+    <div class="srow"><span class="slab">월 납입액</span><input type="range" id="dm" min="0" max="10000000" step="100000" value="0"><span class="sval" id="dmV">0 원</span></div>
     <div class="srow"><span class="slab">연이율</span><input type="range" id="dr" min="0.5" max="15" step="0.1" value="4.0"><span class="sval" id="drV">4.0%</span></div>
   </div>
   <div class="card">
     <div class="card-title teal">주식 투자</div>
-    <div class="srow"><span class="slab">현재 투자금 (평가액)</span><input type="range" id="stkBal" min="0" max="500000000" step="1000000" value="3000000"><span class="sval" id="stkBalV">300만 원</span></div>
+    <div class="srow"><span class="slab">현재 투자금 (평가액)</span><input type="range" id="stkBal" min="0" max="500000000" step="1000000" value="0"><span class="sval" id="stkBalV">0 원</span></div>
     <div class="srow">
       <span class="slab">현재 수익률</span>
-      <input type="range" id="stkRet" min="-90" max="300" step="1" value="12" style="flex:1">
-      <span class="badge pos" id="stkRetBadge">+12%</span>
-      <span class="sval" id="stkRetV" style="min-width:70px">원금 268만</span>
+      <input type="range" id="stkRet" min="-90" max="300" step="1" value="0" style="flex:1">
+      <span class="badge pos" id="stkRetBadge">0%</span>
+      <span class="sval" id="stkRetV" style="min-width:70px">원금 0원</span>
     </div>
-    <div class="srow"><span class="slab">월 투자액</span><input type="range" id="sm" min="100000" max="10000000" step="100000" value="200000"><span class="sval" id="smV">20만 원</span></div>
+    <div class="srow"><span class="slab">월 투자액</span><input type="range" id="sm" min="0" max="10000000" step="100000" value="0"><span class="sval" id="smV">0 원</span></div>
     <div class="srow"><span class="slab">연 기대수익률</span><input type="range" id="sr" min="1" max="50" step="0.5" value="8"><span class="sval" id="srV">8.0%</span></div>
   </div>
   <div class="card">
     <div class="card-title purple">코인 투자</div>
-    <div class="srow"><span class="slab">현재 코인 평가액</span><input type="range" id="coinBal" min="0" max="500000000" step="1000000" value="2000000"><span class="sval" id="coinBalV">200만 원</span></div>
+    <div class="srow"><span class="slab">현재 코인 평가액</span><input type="range" id="coinBal" min="0" max="500000000" step="1000000" value="0"><span class="sval" id="coinBalV">0 원</span></div>
     <div class="srow">
       <span class="slab">현재 수익률</span>
-      <input type="range" id="coinRet" min="-90" max="500" step="1" value="30" style="flex:1">
-      <span class="badge pos" id="coinRetBadge">+30%</span>
-      <span class="sval" id="coinRetV" style="min-width:70px">원금 154만</span>
+      <input type="range" id="coinRet" min="-90" max="500" step="1" value="0" style="flex:1">
+      <span class="badge pos" id="coinRetBadge">0%</span>
+      <span class="sval" id="coinRetV" style="min-width:70px">원금 0원</span>
     </div>
-    <div class="srow"><span class="slab">월 투자액</span><input type="range" id="cm" min="0" max="10000000" step="100000" value="1000000"><span class="sval" id="cmV">100만 원</span></div>
+    <div class="srow"><span class="slab">월 투자액</span><input type="range" id="cm" min="0" max="10000000" step="100000" value="0"><span class="sval" id="cmV">0 원</span></div>
     <div class="srow"><span class="slab">연 기대수익률</span><input type="range" id="cr" min="1" max="100" step="1" value="20"><span class="sval" id="crV">20%</span></div>
   </div>
   <div class="mg4">
@@ -479,6 +535,109 @@ footer a{color:var(--blue);text-decoration:none}
     <table class="amort-table"><thead><tr><th>경과</th><th>원금 상환</th><th>이자 납부</th><th>잔여 원금</th></tr></thead><tbody id="amortBody"></tbody></table>
   </div>
   <p style="font-size:10px;color:var(--text3);line-height:1.65;margin-top:8px">본 계산기는 2026년 4월 기준 참고용입니다. 실제 대출 조건은 금융기관 상담 후 확인하세요.</p>
+
+  <!-- 청약 점수 계산기 -->
+  <div class="card" style="margin-top:20px">
+    <div class="card-title" style="color:var(--purple)">🏆 청약 가점 계산기</div>
+    <div class="explain-box info" style="margin-bottom:12px;font-size:12px">청약 가점은 <b>무주택 기간(최대 32점) + 부양가족 수(최대 35점) + 청약통장 가입기간(최대 17점)</b>으로 최대 84점입니다.</div>
+    <div class="srow">
+      <span class="slab">무주택 기간</span>
+      <select id="sub_nohouse" onchange="calcSub()">
+        <option value="0">1년 미만 (0점)</option>
+        <option value="2">1년 이상 (2점)</option>
+        <option value="4">2년 이상 (4점)</option>
+        <option value="6">3년 이상 (6점)</option>
+        <option value="8">4년 이상 (8점)</option>
+        <option value="10">5년 이상 (10점)</option>
+        <option value="12">6년 이상 (12점)</option>
+        <option value="14">7년 이상 (14점)</option>
+        <option value="16">8년 이상 (16점)</option>
+        <option value="18">9년 이상 (18점)</option>
+        <option value="20">10년 이상 (20점)</option>
+        <option value="22">11년 이상 (22점)</option>
+        <option value="24">12년 이상 (24점)</option>
+        <option value="26">13년 이상 (26점)</option>
+        <option value="28">14년 이상 (28점)</option>
+        <option value="30">15년 이상 (30점)</option>
+        <option value="32">15년 이상(만 30세前부터) (32점)</option>
+      </select>
+    </div>
+    <div class="srow">
+      <span class="slab">부양가족 수</span>
+      <select id="sub_family" onchange="calcSub()">
+        <option value="5">0명 (5점)</option>
+        <option value="10">1명 (10점)</option>
+        <option value="15">2명 (15점)</option>
+        <option value="20">3명 (20점)</option>
+        <option value="25">4명 (25점)</option>
+        <option value="30">5명 (30점)</option>
+        <option value="35">6명 이상 (35점)</option>
+      </select>
+    </div>
+    <div class="srow">
+      <span class="slab">청약통장 가입기간</span>
+      <select id="sub_account" onchange="calcSub()">
+        <option value="1">6개월 미만 (1점)</option>
+        <option value="2">6개월~1년 (2점)</option>
+        <option value="3">1~2년 (3점)</option>
+        <option value="4">2~3년 (4점)</option>
+        <option value="5">3~4년 (5점)</option>
+        <option value="6">4~5년 (6점)</option>
+        <option value="7">5~6년 (7점)</option>
+        <option value="8">6~7년 (8점)</option>
+        <option value="9">7~8년 (9점)</option>
+        <option value="10">8~9년 (10점)</option>
+        <option value="11">9~10년 (11점)</option>
+        <option value="12">10~11년 (12점)</option>
+        <option value="13">11~12년 (13점)</option>
+        <option value="14">12~13년 (14점)</option>
+        <option value="15">13~14년 (15점)</option>
+        <option value="16">14~15년 (16점)</option>
+        <option value="17">15년 이상 (17점)</option>
+      </select>
+    </div>
+    <div class="mg3" style="margin-top:8px">
+      <div class="mc"><div class="ml">무주택 점수</div><div class="mv blue" id="sub_s1">-</div></div>
+      <div class="mc"><div class="ml">부양가족 점수</div><div class="mv teal" id="sub_s2">-</div></div>
+      <div class="mc"><div class="ml">통장 점수</div><div class="mv purple" id="sub_s3">-</div></div>
+    </div>
+    <div class="mc" style="text-align:center;padding:16px;margin-bottom:8px">
+      <div class="ml">🏆 나의 청약 가점 총점</div>
+      <div style="font-size:32px;font-weight:700;color:var(--amber);margin-top:4px" id="sub_total">-</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px" id="sub_grade">-</div>
+    </div>
+    <div id="sub_hint" class="hint-box show info">선택 항목을 바꾸면 가점이 자동 계산됩니다.</div>
+  </div>
+
+  <!-- 전월세 전환 계산기 -->
+  <div class="card">
+    <div class="card-title" style="color:var(--teal)">🔄 전월세 전환 계산기</div>
+    <div class="explain-box info" style="margin-bottom:12px;font-size:12px">전세 ↔ 월세 전환 시 적정 금액을 계산합니다. <b>전월세전환율</b>은 통상 4~6%를 적용합니다.</div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;background:var(--bg3);border-radius:10px;padding:4px">
+      <button class="ai-prov-btn active" id="convBtn-to_monthly" onclick="switchConv('to_monthly')">전세 → 월세</button>
+      <button class="ai-prov-btn" id="convBtn-to_jeonse" onclick="switchConv('to_jeonse')">월세 → 전세</button>
+    </div>
+    <div id="conv-to_monthly">
+      <div class="srow"><span class="slab">전세 보증금</span><input type="range" id="conv_jeonse" min="10000000" max="1000000000" step="10000000" value="300000000" oninput="calcConv()"><span class="sval" id="conv_jeonseV">3억 원</span></div>
+      <div class="srow"><span class="slab">월세 보증금</span><input type="range" id="conv_mbond" min="0" max="500000000" step="5000000" value="50000000" oninput="calcConv()"><span class="sval" id="conv_mbondV">5,000만 원</span></div>
+      <div class="srow"><span class="slab">전환율 (연)</span><input type="range" id="conv_rate" min="1" max="10" step="0.1" value="5" oninput="calcConv()"><span class="sval" id="conv_rateV">5.0%</span></div>
+      <div class="mc" style="text-align:center;padding:16px">
+        <div class="ml">적정 월세</div>
+        <div style="font-size:28px;font-weight:700;color:var(--teal);margin-top:4px" id="conv_result">-</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:4px" id="conv_desc">-</div>
+      </div>
+    </div>
+    <div id="conv-to_jeonse" style="display:none">
+      <div class="srow"><span class="slab">월세 보증금</span><input type="range" id="conv_mbond2" min="0" max="500000000" step="5000000" value="50000000" oninput="calcConv2()"><span class="sval" id="conv_mbond2V">5,000만 원</span></div>
+      <div class="srow"><span class="slab">월세</span><input type="range" id="conv_monthly" min="100000" max="3000000" step="50000" value="500000" oninput="calcConv2()"><span class="sval" id="conv_monthlyV">50만 원</span></div>
+      <div class="srow"><span class="slab">전환율 (연)</span><input type="range" id="conv_rate2" min="1" max="10" step="0.1" value="5" oninput="calcConv2()"><span class="sval" id="conv_rateV2">5.0%</span></div>
+      <div class="mc" style="text-align:center;padding:16px">
+        <div class="ml">적정 전세 보증금</div>
+        <div style="font-size:28px;font-weight:700;color:var(--blue);margin-top:4px" id="conv_result2">-</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:4px" id="conv_desc2">-</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ===== PAGE 3: AI 추천 ===== -->
@@ -522,17 +681,56 @@ footer a{color:var(--blue);text-decoration:none}
   </div>
 
   <div class="card">
-    <div class="card-title amber">AI 맞춤 추천 (Gemini)</div>
-    <div class="api-input-wrap">
-      <div class="api-input-label">Google Gemini API 키 입력 (완전 무료)</div>
+    <div class="card-title amber">✨ AI 맞춤 추천</div>
+
+    <!-- AI Provider 탭 선택 -->
+    <div style="display:flex;gap:6px;margin-bottom:14px;background:var(--bg3);border-radius:10px;padding:4px">
+      <button class="ai-prov-btn active" id="provBtn-gemini" onclick="selectProvider('gemini')">
+        <span>🔷</span> Gemini
+      </button>
+      <button class="ai-prov-btn" id="provBtn-openai" onclick="selectProvider('openai')">
+        <span>⚫</span> ChatGPT
+      </button>
+      <button class="ai-prov-btn" id="provBtn-claude" onclick="selectProvider('claude')">
+        <span>🟠</span> Claude
+      </button>
+    </div>
+
+    <!-- Gemini 안내 -->
+    <div id="guide-gemini" class="api-input-wrap">
+      <div class="api-input-label">🔷 Google Gemini API 키 (완전 무료)</div>
       <div class="api-input-desc">
         Google 계정만 있으면 카드 없이 무료 발급 가능합니다.<br>
         1. <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> 접속<br>
-        2. Google 계정으로 로그인<br>
-        3. <b>"Create API Key"</b> 클릭 → 키 복사 → 아래 입력
+        2. Google 계정 로그인 → <b>"Create API Key"</b> 클릭 → 복사
       </div>
-      <input class="api-key-field" type="password" id="apiKey" placeholder="AIza...">
+      <input class="api-key-field" type="password" id="apiKey-gemini" placeholder="AIza...">
     </div>
+
+    <!-- OpenAI 안내 -->
+    <div id="guide-openai" class="api-input-wrap" style="display:none">
+      <div class="api-input-label">⚫ OpenAI API 키 (유료, 소액 과금)</div>
+      <div class="api-input-desc">
+        OpenAI 계정 가입 후 크레딧 충전이 필요합니다.<br>
+        1. <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a> 접속<br>
+        2. 로그인 → <b>"Create new secret key"</b> 클릭 → 복사<br>
+        <b>사용 모델:</b> gpt-4o-mini (저렴하고 빠름)
+      </div>
+      <input class="api-key-field" type="password" id="apiKey-openai" placeholder="sk-...">
+    </div>
+
+    <!-- Claude 안내 -->
+    <div id="guide-claude" class="api-input-wrap" style="display:none">
+      <div class="api-input-label">🟠 Anthropic Claude API 키 (유료, 소액 과금)</div>
+      <div class="api-input-desc">
+        Anthropic 계정 가입 후 크레딧 충전이 필요합니다.<br>
+        1. <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com/settings/keys</a> 접속<br>
+        2. 로그인 → <b>"Create Key"</b> 클릭 → 복사<br>
+        <b>사용 모델:</b> claude-haiku-4-5 (빠르고 저렴)
+      </div>
+      <input class="api-key-field" type="password" id="apiKey-claude" placeholder="sk-ant-...">
+    </div>
+
     <div class="srow"><span class="slab">보유 현금</span><input type="range" id="rcash" min="50000000" max="2000000000" step="10000000" value="300000000"><span class="sval" id="rcashV">3억 원</span></div>
     <div class="srow"><span class="slab">연소득</span><input type="range" id="rinc" min="20000000" max="200000000" step="2000000" value="60000000"><span class="sval" id="rincV">6,000만 원</span></div>
     <div class="srow"><span class="slab">주택 보유</span>
@@ -550,7 +748,7 @@ footer a{color:var(--blue);text-decoration:none}
       <div class="mc"><div class="ml">월 상환 부담</div><div class="mv amber" id="rMonEst">-</div></div>
     </div>
     <button class="btn primary" id="aiBtn" onclick="runAI()"><span id="aiLabel">AI 맞춤 추천 받기</span></button>
-    <div class="ai-box" id="aiBox"><span style="color:var(--text3)">API 키를 입력하고 조건을 설정한 뒤 버튼을 누르세요.</span></div>
+    <div class="ai-box" id="aiBox"><span style="color:var(--text3)">AI 제공사를 선택하고 API 키를 입력한 뒤 버튼을 누르세요.</span></div>
   </div>
 </div>
 
@@ -560,7 +758,7 @@ footer a{color:var(--blue);text-decoration:none}
 
 <footer>
   <p>2026년 4월 기준 참고용 시뮬레이터입니다. 투자 결과의 책임은 본인에게 있습니다.</p>
-  <p style="margin-top:4px">AI 추천: <a href="https://aistudio.google.com/apikey" target="_blank">Google Gemini API</a> (무료) 사용</p>
+  <p style="margin-top:4px">AI 추천: Gemini · ChatGPT · Claude API 지원 (API 키 필요)</p>
   <p style="margin-top:10px;font-size:12px;color:var(--text2);font-weight:500">Made by <span style="color:var(--blue);font-weight:700">raf</span> ✦</p>
 </footer>
 
@@ -623,12 +821,21 @@ function getChartColor() { return isDark ? '#f0f2f8' : '#1a1d2e'; }
 function getGridColor() { return isDark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.06)'; }
 function getTickColor() { return isDark ? '#555a72' : '#9095b0'; }
 
+/* ===== WELCOME ===== */
+function enterApp(tab) {
+  const ws = document.getElementById('welcomeScreen');
+  ws.classList.add('fade-out');
+  setTimeout(() => { ws.style.display = 'none'; }, 400);
+  const tabBtn = document.querySelector(`.tab[data-tab="${tab}"]`);
+  switchTab(tab, tabBtn);
+}
+
 /* ===== TAB ===== */
 function switchTab(t, btn) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+t).classList.add('active');
-  btn.classList.add('active');
+  if (btn) btn.classList.add('active');
 }
 
 /* ===== PAGE 1: INVEST ===== */
@@ -1178,9 +1385,35 @@ function updateREst() {
   document.getElementById('rMonEst').textContent=loan>0?fmtW(mon)+'/월':'대출 없음';
 }
 
+/* ===== AI PROVIDER ===== */
+let selProvider = 'gemini';
+function selectProvider(p) {
+  selProvider = p;
+  ['gemini','openai','claude'].forEach(id => {
+    document.getElementById('provBtn-'+id).classList.toggle('active', id===p);
+    document.getElementById('guide-'+id).style.display = id===p ? 'block' : 'none';
+  });
+}
+
 async function runAI() {
-  const apiKey=document.getElementById('apiKey').value.trim();
-  if (!apiKey) { alert('Gemini API 키를 입력해주세요.\naistudio.google.com/apikey 에서 무료로 발급받을 수 있습니다.'); return; }
+  const providerKeys = {
+    gemini: document.getElementById('apiKey-gemini').value.trim(),
+    openai: document.getElementById('apiKey-openai').value.trim(),
+    claude: document.getElementById('apiKey-claude').value.trim()
+  };
+  const apiKey = providerKeys[selProvider];
+  const providerNames = {gemini:'Gemini', openai:'ChatGPT (GPT-4o mini)', claude:'Claude Haiku'};
+
+  if (!apiKey) {
+    const guides = {
+      gemini:'aistudio.google.com/apikey 에서 무료로 발급받을 수 있습니다.',
+      openai:'platform.openai.com/api-keys 에서 발급받을 수 있습니다.',
+      claude:'console.anthropic.com/settings/keys 에서 발급받을 수 있습니다.'
+    };
+    alert(`${providerNames[selProvider]} API 키를 입력해주세요.\n${guides[selProvider]}`);
+    return;
+  }
+
   const cash=+document.getElementById('rcash').value;
   const inc=+document.getElementById('rinc').value;
   const own=document.getElementById('rown').value;
@@ -1213,31 +1446,111 @@ ${distInfo}
 ※ 본 분석은 참고용이며 투자 결과의 책임은 본인에게 있습니다.`;
 
   const btn=document.getElementById('aiBtn'),box=document.getElementById('aiBox'),label=document.getElementById('aiLabel');
-  btn.disabled=true;label.innerHTML='<span class="spin"></span> 분석 중...';
-  box.innerHTML='<span style="color:var(--text3)">Gemini AI가 분석 중입니다...</span>';
+  btn.disabled=true;
+  label.innerHTML=`<span class="spin"></span> ${providerNames[selProvider]} 분석 중...`;
+  box.innerHTML=`<span style="color:var(--text3)">${providerNames[selProvider]}가 분석 중입니다...</span>`;
+
   try {
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,{
-      method:'POST',headers:{'content-type':'application/json'},
-      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1000,temperature:0.7}})
-    });
-    if (!res.ok) { const e=await res.text();let msg='API 오류 (HTTP '+res.status+')';try{const j=JSON.parse(e);if(j.error?.message)msg+='\n'+j.error.message;}catch(_){}box.textContent=msg;return; }
-    const data=await res.json();
-    box.textContent=data?.candidates?.[0]?.content?.parts?.[0]?.text||'응답을 받지 못했습니다.';
+    let resultText = '';
+
+    if (selProvider === 'gemini') {
+      const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,{
+        method:'POST',headers:{'content-type':'application/json'},
+        body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1000,temperature:0.7}})
+      });
+      if (!res.ok) { const e=await res.text();let msg='Gemini API 오류 (HTTP '+res.status+')';try{const j=JSON.parse(e);if(j.error?.message)msg+='\n'+j.error.message;}catch(_){}box.textContent=msg;return; }
+      const data=await res.json();
+      resultText=data?.candidates?.[0]?.content?.parts?.[0]?.text||'응답을 받지 못했습니다.';
+
+    } else if (selProvider === 'openai') {
+      const res=await fetch('https://api.openai.com/v1/chat/completions',{
+        method:'POST',
+        headers:{'content-type':'application/json','Authorization':'Bearer '+apiKey},
+        body:JSON.stringify({model:'gpt-4o-mini',messages:[{role:'user',content:prompt}],max_tokens:1000,temperature:0.7})
+      });
+      if (!res.ok) { const e=await res.text();let msg='OpenAI API 오류 (HTTP '+res.status+')';try{const j=JSON.parse(e);if(j.error?.message)msg+='\n'+j.error.message;}catch(_){}box.textContent=msg;return; }
+      const data=await res.json();
+      resultText=data?.choices?.[0]?.message?.content||'응답을 받지 못했습니다.';
+
+    } else if (selProvider === 'claude') {
+      const res=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'content-type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-calls':'true'},
+        body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+      });
+      if (!res.ok) { const e=await res.text();let msg='Claude API 오류 (HTTP '+res.status+')';try{const j=JSON.parse(e);if(j.error?.message)msg+='\n'+j.error.message;}catch(_){}box.textContent=msg;return; }
+      const data=await res.json();
+      resultText=data?.content?.[0]?.text||'응답을 받지 못했습니다.';
+    }
+
+    box.textContent=resultText;
   } catch(e) {
-    box.textContent='오류: '+e.message+'\n\nAPI 키를 확인하거나 aistudio.google.com/apikey에서 새 키를 발급받아 시도해주세요.';
+    box.textContent='오류: '+e.message+'\n\nAPI 키를 확인하거나 다시 시도해주세요.';
   } finally {
     btn.disabled=false;label.textContent='AI 맞춤 추천 받기';
   }
 }
 
-['rcash','rinc'].forEach(id=>document.getElementById(id).addEventListener('input',updateREst));
+/* ===== 청약 가점 ===== */
+function calcSub() {
+  const s1 = +document.getElementById('sub_nohouse').value;
+  const s2 = +document.getElementById('sub_family').value;
+  const s3 = +document.getElementById('sub_account').value;
+  const total = s1 + s2 + s3;
+  document.getElementById('sub_s1').textContent = s1 + '점';
+  document.getElementById('sub_s2').textContent = s2 + '점';
+  document.getElementById('sub_s3').textContent = s3 + '점';
+  document.getElementById('sub_total').textContent = total + '점';
+  let grade, cls;
+  if (total >= 70) { grade = '🏅 최상위권 — 인기 단지 당첨 가능성 높음'; cls = 'good'; }
+  else if (total >= 55) { grade = '👍 상위권 — 중대형 인기 단지 도전 가능'; cls = 'good'; }
+  else if (total >= 40) { grade = '📊 중위권 — 외곽·비인기 단지 당첨 기대'; cls = 'info'; }
+  else if (total >= 25) { grade = '⚠️ 하위권 — 가점제 당첨 어려움, 추첨제 활용'; cls = 'warn'; }
+  else { grade = '❌ 최하위 — 가점제보다 추첨제 물량 노리기'; cls = 'bad'; }
+  const hint = document.getElementById('sub_hint');
+  hint.className = 'hint-box show ' + cls;
+  hint.innerHTML = grade;
+}
 
+/* ===== 전월세 전환 ===== */
+let convMode = 'to_monthly';
+function switchConv(mode) {
+  convMode = mode;
+  ['to_monthly','to_jeonse'].forEach(m => {
+    document.getElementById('convBtn-'+m).classList.toggle('active', m===mode);
+    document.getElementById('conv-'+m).style.display = m===mode ? 'block' : 'none';
+  });
+  if (mode === 'to_monthly') calcConv(); else calcConv2();
+}
+function calcConv() {
+  const jeonse = +document.getElementById('conv_jeonse').value;
+  const mbond  = +document.getElementById('conv_mbond').value;
+  const rate   = +document.getElementById('conv_rate').value;
+  document.getElementById('conv_jeonseV').textContent = fmtW(jeonse);
+  document.getElementById('conv_mbondV').textContent  = fmtW(mbond);
+  document.getElementById('conv_rateV').textContent   = rate.toFixed(1) + '%';
+  const diff = Math.max(0, jeonse - mbond);
+  const monthly = Math.round(diff * rate / 100 / 12);
+  document.getElementById('conv_result').textContent = fmtW(monthly) + '/월';
+  document.getElementById('conv_desc').textContent = `(전세 ${fmtW(jeonse)} - 보증금 ${fmtW(mbond)}) × ${rate}% ÷ 12`;
+}
+function calcConv2() {
+  const mbond   = +document.getElementById('conv_mbond2').value;
+  const monthly = +document.getElementById('conv_monthly').value;
+  const rate    = +document.getElementById('conv_rate2').value;
+  document.getElementById('conv_mbond2V').textContent  = fmtW(mbond);
+  document.getElementById('conv_monthlyV').textContent  = fmtW(monthly);
+  document.getElementById('conv_rateV2').textContent    = rate.toFixed(1) + '%';
+  const jeonse = Math.round(monthly * 12 / (rate/100)) + mbond;
+  document.getElementById('conv_result2').textContent = fmtW(jeonse);
+  document.getElementById('conv_desc2').textContent   = `월세 ${fmtW(monthly)} × 12 ÷ ${rate}% + 보증금 ${fmtW(mbond)}`;
+}
+
+/* ===== INIT ===== */
 function rechartAll() {
   if (document.getElementById('page-invest').classList.contains('active')) calcInvest();
   if (document.getElementById('page-mortgage').classList.contains('active')) calcMortgage();
 }
-
-/* ===== INIT ===== */
 onRegionChange();
 onOwnershipChange();
 onPurposeChange();
@@ -1245,6 +1558,8 @@ onRepayChange();
 renderBanks();
 calcMortgage();
 calcInvest();
+calcSub();
+calcConv();
 onCityChange();
 </script>
 </body>
