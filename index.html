@@ -51,7 +51,7 @@ header p{color:var(--text2);font-size:13px;margin-bottom:20px}
 
 /* TABS */
 .tabs{display:flex;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:5px;margin:0 16px 20px;max-width:708px;margin-left:auto;margin-right:auto}
-.tab{flex:1;padding:9px 6px;border-radius:8px;border:none;background:transparent;color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;font-family:inherit;white-space:nowrap}
+.tab{flex:1;padding:9px 6px;border-radius:8px;border:none;background:transparent;color:var(--text2);font-size:11px;font-weight:500;cursor:pointer;transition:all .2s;font-family:inherit;white-space:nowrap}
 .tab.active{background:var(--bg3);color:var(--text);box-shadow:0 1px 4px var(--shadow)}
 
 /* CONTAINER */
@@ -255,9 +255,9 @@ footer a{color:var(--blue);text-decoration:none}
 </header>
 
 <div class="tabs">
-  <button class="tab active" onclick="switchTab('invest',this)">목표금액</button>
-  <button class="tab" onclick="switchTab('mortgage',this)">부동산 계산기</button>
-  <button class="tab" onclick="switchTab('realty',this)">AI 지역 추천</button>
+  <button class="tab active" onclick="switchTab('invest',this)">🎯 목표금액 시뮬레이터</button>
+  <button class="tab" onclick="switchTab('mortgage',this)">🏠 부동산 대출 계산기</button>
+  <button class="tab" onclick="switchTab('realty',this)">✨ AI 맞춤 지역 추천</button>
 </div>
 
 <div class="container" id="mainContent">
@@ -267,9 +267,50 @@ footer a{color:var(--blue);text-decoration:none}
   <div class="card">
     <div class="card-title">목표 설정</div>
     <div class="srow"><span class="slab">목표 금액</span><input type="range" id="goal" min="10000000" max="2000000000" step="5000000" value="100000000"><span class="sval" id="goalV">1억 원</span></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:4px;margin-bottom:2px">
+      <span style="font-size:12px;color:var(--text2);min-width:120px;flex-shrink:0">직접 입력 (만 원)</span>
+      <input type="number" id="goalDirect" placeholder="예: 15000 (1억5천만)" min="100" max="200000" step="100"
+        style="flex:1;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;background:var(--bg3);color:var(--text);font-size:12px;font-family:inherit;outline:none;-moz-appearance:textfield"
+        oninput="onGoalDirectInput()">
+      <span style="font-size:12px;color:var(--text2);flex-shrink:0">만 원</span>
+    </div>
   </div>
-  <div class="card">
-    <div class="card-title blue">적립식 정기예금</div>
+  <div class="card" id="reqCard">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0" id="reqHeader" onclick="toggleReqCalc()" style="cursor:pointer">
+      <div class="card-title" style="color:var(--amber);margin-bottom:0;cursor:pointer">💡 필요 적립액 자동 계산</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span style="font-size:11px;color:var(--text2)" id="reqToggleLabel">펼치기</span>
+        <div id="reqToggle" style="width:38px;height:22px;border-radius:99px;background:var(--bg3);border:1.5px solid var(--border2);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0" onclick="toggleReqCalc(event)">
+          <div id="reqToggleThumb" style="position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--text3);transition:all .2s"></div>
+        </div>
+      </div>
+    </div>
+    <div id="reqBody" style="display:none;margin-top:14px">
+      <div class="explain-box info" style="margin-bottom:12px;font-size:12px">목표금액과 기간만 입력하면 <b>매달 얼마를 적립해야 하는지</b> 자동 계산해드립니다.</div>
+      <div class="srow">
+        <span class="slab">목표 기간</span>
+        <input type="range" id="reqPeriod" min="1" max="360" step="1" value="60">
+        <span class="sval" id="reqPeriodV">60개월</span>
+      </div>
+      <div class="srow">
+        <span class="slab">현재 보유 금액</span>
+        <input type="range" id="reqNow" min="0" max="500000000" step="1000000" value="0">
+        <span class="sval" id="reqNowV">0 원</span>
+      </div>
+      <div class="srow">
+        <span class="slab">연이율 가정</span>
+        <input type="range" id="reqRate" min="0" max="15" step="0.1" value="4.0">
+        <span class="sval" id="reqRateV">4.0%</span>
+      </div>
+      <div class="mg2" style="margin-top:4px">
+        <div class="mc"><div class="ml">목표 금액</div><div class="mv red" id="reqGoalDisp">-</div></div>
+        <div class="mc"><div class="ml">목표 기간</div><div class="mv blue" id="reqPeriodDisp">-</div></div>
+        <div class="mc"><div class="ml">필요 월 적립액</div><div class="mv amber" id="reqMonthly" style="font-size:18px;font-weight:700">-</div></div>
+        <div class="mc"><div class="ml">총 납입 원금</div><div class="mv teal" id="reqPrinTotal">-</div></div>
+      </div>
+      <div id="reqHint" class="hint-box" style="margin-top:4px"></div>
+    </div>
+  </div>
     <div class="srow"><span class="slab">현재 예금 잔액</span><input type="range" id="depBal" min="0" max="500000000" step="1000000" value="5000000"><span class="sval" id="depBalV">500만 원</span></div>
     <div class="srow">
       <span class="slab">예금 시작월</span>
@@ -321,12 +362,12 @@ footer a{color:var(--blue);text-decoration:none}
   </div>
   <div class="card">
     <div class="card-title">월별 자산 성장 추이</div>
-    <div class="leg"><span><span class="ld" style="background:#4f7fff"></span>예금</span><span><span class="ld" style="background:#2dd4a0"></span>주식</span><span><span class="ld" style="background:#a78bfa"></span>코인</span><span><span class="ld" style="background:var(--text)"></span>합계</span><span><span class="ld" style="background:#f5a623"></span>목표선</span></div>
-    <div class="chart-wrap" style="height:230px"><canvas id="growthChart" role="img" aria-label="월별 자산 성장 추이"></canvas></div>
+    <div class="leg"><span><span class="ld" style="background:#4f9bff"></span>예금</span><span><span class="ld" style="background:#00e5a0"></span>주식</span><span><span class="ld" style="background:#c084fc"></span>코인</span><span><span class="ld" style="background:#ffffff"></span>합계</span><span><span class="ld" style="background:#fbbf24;border:1px dashed #fbbf24"></span>목표선</span></div>
+    <div class="chart-wrap" style="height:260px"><canvas id="growthChart" role="img" aria-label="월별 자산 성장 추이"></canvas></div>
   </div>
   <div class="card">
     <div class="card-title">목표 달성 시점 자산 구성</div>
-    <div class="chart-wrap" style="height:190px"><canvas id="donutChart" role="img" aria-label="자산 구성"></canvas></div>
+    <div class="chart-wrap" style="height:220px"><canvas id="donutChart" role="img" aria-label="자산 구성"></canvas></div>
     <div class="donut-leg" id="donutLeg"></div>
   </div>
 </div>
@@ -520,6 +561,7 @@ footer a{color:var(--blue);text-decoration:none}
 <footer>
   <p>2026년 4월 기준 참고용 시뮬레이터입니다. 투자 결과의 책임은 본인에게 있습니다.</p>
   <p style="margin-top:4px">AI 추천: <a href="https://aistudio.google.com/apikey" target="_blank">Google Gemini API</a> (무료) 사용</p>
+  <p style="margin-top:10px;font-size:12px;color:var(--text2);font-weight:500">Made by <span style="color:var(--blue);font-weight:700">raf</span> ✦</p>
 </footer>
 
 <script>
@@ -674,11 +716,11 @@ function calcInvest() {
   if (growthChart) growthChart.destroy();
   growthChart=new Chart(document.getElementById('growthChart'),{
     type:'line',data:{labels,datasets:[
-      {label:'예금',data:dA,borderColor:'#4f7fff',backgroundColor:'rgba(79,127,255,.07)',fill:true,tension:.35,pointRadius:0,borderWidth:1.5},
-      {label:'주식',data:sA,borderColor:'#2dd4a0',backgroundColor:'rgba(45,212,160,.07)',fill:true,tension:.35,pointRadius:0,borderWidth:1.5},
-      {label:'코인',data:cA,borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,.07)',fill:true,tension:.35,pointRadius:0,borderWidth:1.5},
-      {label:'합계',data:tA,borderColor:getChartColor(),backgroundColor:'transparent',tension:.35,pointRadius:0,borderWidth:2},
-      {label:'목표',data:Array(mos.length).fill(goal),borderColor:'#f5a623',borderDash:[5,4],borderWidth:1.5,backgroundColor:'transparent',pointRadius:0},
+      {label:'예금',data:dA,borderColor:'#4f9bff',backgroundColor:'transparent',fill:false,tension:.35,pointRadius:0,borderWidth:2.5},
+      {label:'주식',data:sA,borderColor:'#00e5a0',backgroundColor:'transparent',fill:false,tension:.35,pointRadius:0,borderWidth:2.5},
+      {label:'코인',data:cA,borderColor:'#c084fc',backgroundColor:'transparent',fill:false,tension:.35,pointRadius:0,borderWidth:2.5},
+      {label:'합계',data:tA,borderColor:isDark?'#ffffff':'#1a1d2e',backgroundColor:'transparent',tension:.35,pointRadius:0,borderWidth:3,borderDash:[]},
+      {label:'목표',data:Array(mos.length).fill(goal),borderColor:'#fbbf24',borderDash:[6,4],borderWidth:2,backgroundColor:'transparent',pointRadius:0},
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmtW(ctx.raw)}}},
       scales:{x:{ticks:{color:getTickColor(),font:{size:10},maxTicksLimit:7,autoSkip:true},grid:{display:false}},y:{ticks:{color:getTickColor(),font:{size:10},callback:v=>fmtC(v)},grid:{color:getGridColor()}}}}
@@ -686,18 +728,99 @@ function calcInvest() {
 
   const pd=[Math.max(0,depBal),Math.max(0,addDep),Math.max(0,depInt),Math.max(0,Math.round(stkCost)),Math.max(0,Math.round(stkCurGain)),Math.max(0,addStk),Math.max(0,addStkG),Math.max(0,Math.round(coinCost)),Math.max(0,Math.round(coinCurGain)),Math.max(0,addCoin),Math.max(0,addCoinG)];
   const pl=['예금 잔액','예금 추가납입','예금 이자','주식 원금','주식 현재수익','주식 추가납입','주식 추가수익','코인 원금','코인 현재수익','코인 추가납입','코인 추가수익'];
-  const pc=['#4f7fff','#378ADD','#85B7EB','#2dd4a0','#1D9E75','#5DCAA5','#9FE1CB','#a78bfa','#7F77DD','#AFA9EC','#CECBF6'];
+  const pc=['#4f9bff','#1a6cd4','#93c5fd','#00e5a0','#00a86b','#34d399','#6ee7b7','#c084fc','#8b35e0','#d8b4fe','#ede9fe'];
   const ptotal=pd.reduce((a,b)=>a+b,0);
   if (donutChart) donutChart.destroy();
   donutChart=new Chart(document.getElementById('donutChart'),{
-    type:'doughnut',data:{labels:pl,datasets:[{data:pd,backgroundColor:pc,borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.label+': '+fmtW(ctx.raw)+' ('+Math.round(ctx.raw/ptotal*100)+'%)'}}}}
+    type:'doughnut',data:{labels:pl,datasets:[{data:pd,backgroundColor:pc,borderWidth:2,borderColor:isDark?'#1a1d27':'#ffffff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.label+': '+fmtW(ctx.raw)+' ('+Math.round(ctx.raw/ptotal*100)+'%)'}}}}
   });
-  document.getElementById('donutLeg').innerHTML=pl.map((l,i)=>pd[i]>0?`<div class="dl-item"><span class="dl-label"><span style="width:8px;height:8px;border-radius:2px;background:${pc[i]};display:inline-block;flex-shrink:0"></span>${l}</span><span class="dl-val">${fmtW(pd[i])}<span class="dl-pct">(${Math.round(pd[i]/ptotal*100)}%)</span></span></div>`:'').join('');
+  document.getElementById('donutLeg').innerHTML=pl.map((l,i)=>pd[i]>0?`<div class="dl-item"><span class="dl-label"><span style="width:10px;height:10px;border-radius:3px;background:${pc[i]};display:inline-block;flex-shrink:0"></span>${l}</span><span class="dl-val">${fmtW(pd[i])}<span class="dl-pct">(${Math.round(pd[i]/ptotal*100)}%)</span></span></div>`:'').join('');
 }
 
 ['goal','depBal','dm','dr','stkBal','stkRet','sm','sr','coinBal','coinRet','cm','cr'].forEach(id=>document.getElementById(id).addEventListener('input',calcInvest));
 depYSel.addEventListener('change',calcInvest);depMSel.addEventListener('change',calcInvest);
+
+/* 목표금액 직접 입력 동기화 */
+function onGoalDirectInput() {
+  const v = Math.round(+document.getElementById('goalDirect').value) * 10000;
+  if (!v || v < 1000000) return;
+  const slider = document.getElementById('goal');
+  const clamped = Math.min(Math.max(v, +slider.min), +slider.max);
+  slider.value = clamped;
+  calcInvest();
+}
+/* 슬라이더가 움직이면 직접입력란도 업데이트 */
+document.getElementById('goal').addEventListener('input', function() {
+  const manUnit = Math.round(+this.value / 10000);
+  document.getElementById('goalDirect').value = manUnit;
+});
+
+/* ===== 필요 적립액 계산 ===== */
+function calcRequired() {
+  const goal = +document.getElementById('goal').value;
+  const n = +document.getElementById('reqPeriod').value;
+  const now = +document.getElementById('reqNow').value;
+  const annRate = +document.getElementById('reqRate').value;
+  const r = annRate / 100 / 12;
+
+  document.getElementById('reqPeriodV').textContent = fmtM(n);
+  document.getElementById('reqNowV').textContent = fmtW(now);
+  document.getElementById('reqRateV').textContent = annRate.toFixed(1) + '%';
+  document.getElementById('reqGoalDisp').textContent = fmtW(goal);
+  document.getElementById('reqPeriodDisp').textContent = fmtM(n);
+
+  // 현재 보유금 미래가치 빼기 후 나머지를 적립식으로 모아야 함
+  const fvNow = now * Math.pow(1 + r, n);
+  const remaining = goal - fvNow;
+
+  let monthly;
+  if (remaining <= 0) {
+    monthly = 0;
+  } else if (r === 0) {
+    monthly = remaining / n;
+  } else {
+    monthly = remaining * r / (Math.pow(1 + r, n) - 1);
+  }
+
+  const hint = document.getElementById('reqHint');
+  if (monthly <= 0) {
+    document.getElementById('reqMonthly').textContent = '이미 달성!';
+    document.getElementById('reqPrinTotal').textContent = '-';
+    hint.className = 'hint-box show good';
+    hint.innerHTML = `현재 보유금(${fmtW(now)})을 ${annRate.toFixed(1)}% 운용하면 ${fmtM(n)} 후 이미 목표를 달성할 수 있어요!`;
+  } else {
+    const prinTotal = Math.round(monthly * n);
+    const interest = Math.round(goal - now - prinTotal);
+    document.getElementById('reqMonthly').textContent = fmtW(Math.ceil(monthly / 10000) * 10000);
+    document.getElementById('reqPrinTotal').textContent = fmtW(prinTotal);
+    hint.className = 'hint-box show info';
+    hint.innerHTML = `월 <b>${fmtW(Math.ceil(monthly/10000)*10000)}</b> 적립 시 → 총 납입 <b>${fmtW(prinTotal)}</b> + 이자수익 <b>+${fmtW(Math.max(0,interest))}</b> = 목표 달성`;
+  }
+}
+
+['reqPeriod','reqNow','reqRate'].forEach(id=>document.getElementById(id).addEventListener('input',calcRequired));
+// goal 변경 시 함께 재계산
+document.getElementById('goal').addEventListener('input', calcRequired);
+
+/* ===== 필요 적립액 토글 ===== */
+let reqOpen = false;
+function toggleReqCalc(e) {
+  if (e) e.stopPropagation();
+  reqOpen = !reqOpen;
+  const body = document.getElementById('reqBody');
+  const toggle = document.getElementById('reqToggle');
+  const thumb = document.getElementById('reqToggleThumb');
+  const label = document.getElementById('reqToggleLabel');
+  body.style.display = reqOpen ? 'block' : 'none';
+  toggle.style.background = reqOpen ? 'var(--blue)' : 'var(--bg3)';
+  thumb.style.left = reqOpen ? '20px' : '2px';
+  thumb.style.background = reqOpen ? '#fff' : 'var(--text3)';
+  label.textContent = reqOpen ? '접기' : '펼치기';
+  if (reqOpen) calcRequired();
+}
+document.getElementById('reqCard').style.cursor = 'default';
+document.getElementById('reqHeader').style.cursor = 'pointer';
 
 /* ===== PAGE 2: MORTGAGE ===== */
 const BANKS=[
