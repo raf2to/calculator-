@@ -347,7 +347,6 @@ footer{text-align:center;padding:14px 16px 28px;font-size:11px;color:var(--text3
 .exit-pct-input{width:64px;padding:5px 8px;border:1px solid var(--border2);border-radius:7px;background:var(--bg2);color:var(--text);font-size:12px;font-family:inherit;outline:none;text-align:center;-moz-appearance:textfield}
 .exit-pct-input::-webkit-outer-spin-button,.exit-pct-input::-webkit-inner-spin-button{-webkit-appearance:none}
 .exit-pct-input:focus{border-color:var(--blue)}
-</style>
 @media(max-width:480px){
   .topbar{padding:12px 14px 0}
   .container{padding:10px 12px 60px}
@@ -2309,6 +2308,8 @@ async function pfRefreshAll(){
   pfRenderAssets();pfCalcSummary();pfCalcTarget();
   pfSetStatus('live',new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+'에 업데이트');
   pfCountdown=600;
+  // 목표금액 탭 연동 갱신
+  if(typeof syncPortfolioToInvest==='function') syncPortfolioToInvest();
 }
 
 /* 카운트다운 */
@@ -2700,7 +2701,9 @@ function pfAddAsset(type){
     document.getElementById('pa_k_name').value='';document.getElementById('pa_k_code').value='';
     document.getElementById('pa_k_selected').style.display='none';
   }
-  pfAssets.push(asset);pfSave();pfRefreshAll();
+  pfAssets.push(asset);pfSave();
+  if(typeof appSaveAll==='function')appSaveAll();
+  pfRefreshAll();
 }
 
 /* 포트폴리오 초기화 */
@@ -2719,9 +2722,231 @@ function rechartAll(){
   if(document.getElementById('page-realty').classList.contains('active'))onCityChange();
 }
 
-/* ===== INIT ===== */
-onRegionChange();onOwnershipChange();onPurposeChange();onRepayChange();
-renderBanks();calcMortgage();calcInvest();calcSub();onCityChange();
+/* =====================================================
+   전체 페이지 자동저장 시스템
+   - 모든 input/select/range 값을 localStorage에 저장
+   - 페이지 로드 시 자동 복원
+   - 포트폴리오 ↔ 목표금액 실시간 연동
+   ===================================================== */
+const APP_SAVE_KEY = 'raf_calc_state_v1';
+
+/* 저장할 input ID 목록 */
+const SAVE_IDS = [
+  // 목표금액 탭
+  'goal','goalText','depBal','depBalText','depY','depM','dm','dmText','dr','drText',
+  'stkBal','stkBalText','stkRet','stkRetText','sm','smText','sr','srText',
+  'coinBal','coinBalText','coinRet','coinRetText','cm','cmText','cr','crText',
+  // 필요 적립액
+  'reqPeriod','reqPeriodText','reqNow','reqNowText','reqRate','reqRateText',
+  // 대출 계산기
+  'region','price','priceText','ownership','purpose','mincome','mincomeText',
+  'existDebt','existDebtText','term','termText','repayType',
+  // 청약
+  'sub_nohouse','sub_family','sub_account',
+  // 전월세
+  'conv_jeonse','conv_jeonseText','conv_mbond','conv_mbondText','conv_rate','conv_rateText',
+  'conv_mbond2','conv_mbond2Text','conv_monthly','conv_monthlyText','conv_rate2','conv_rate2Text',
+  // AI추천
+  'citySelect','rcash','rcashText','rinc','rincText','rown','rpurp','rper',
+  // 포트폴리오 목표
+  'pf_goal','pf_targetDate','pf_monthly',
+];
+
+function appSaveAll() {
+  try {
+    const state = {};
+    SAVE_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      state[id] = el.value;
+    });
+    state._savedAt = Date.now();
+    localStorage.setItem(APP_SAVE_KEY, JSON.stringify(state));
+  } catch(e) {}
+}
+
+function appLoadAll() {
+  try {
+    const raw = localStorage.getItem(APP_SAVE_KEY);
+    if (!raw) return;
+    const state = JSON.parse(raw);
+    SAVE_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el || state[id] === undefined) return;
+      el.value = state[id];
+    });
+  } catch(e) {}
+}
+
+/* 모든 input/select/range에 저장 이벤트 달기 */
+function appBindSaveEvents() {
+  SAVE_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const evt = (el.tagName === 'SELECT' || el.type === 'month') ? 'change' : 'input';
+    el.addEventListener(evt, () => appSaveAll());
+  });
+}
+
+/* =====================================================
+   포트폴리오 ↔ 목표금액 연동
+   - 포트폴리오 총 평가금액을 목표금액 탭의 현재 자산으로 반영
+   - 연동 요약 카드 렌더링
+   ===================================================== */
+function syncPortfolioToInvest() {
+  if (!pfAssets || !pfAssets.length) return;
+
+  // 포트폴리오 총 평가금액 계산
+  let totalEvalKRW = 0, totalCostKRW = 0;
+  const assetRows = [];
+
+  pfAssets.forEach(a => {
+    const d = pfGetData(a);
+    const eval_ = d.evalKRW > 0 ? d.evalKRW : d.costKRW;
+    totalEvalKRW += eval_;
+    totalCostKRW += d.costKRW;
+    assetRows.push({
+      name: a.name, ticker: a.ticker, type: a.type,
+      eval: eval_, cost: d.costKRW,
+      pnl: d.evalKRW > 0 ? d.pnlKRW : 0,
+      pct: d.pct, curPrice: d.curPriceKRW, avgPrice: d.avgPriceKRW,
+      hasPrc: d.curPriceKRW > 0
+    });
+  });
+
+  const totalPnl = totalEvalKRW - totalCostKRW;
+  const totalPct = totalCostKRW > 0 ? totalPnl / totalCostKRW * 100 : 0;
+
+  // 연동 카드 렌더링 (목표금액 탭 최상단)
+  let syncCard = document.getElementById('syncCard');
+  if (!syncCard) {
+    syncCard = document.createElement('div');
+    syncCard.id = 'syncCard';
+    syncCard.className = 'card';
+    syncCard.style.borderColor = 'var(--blue)';
+    const investPage = document.getElementById('page-invest');
+    investPage.insertBefore(syncCard, investPage.firstChild);
+  }
+
+  const typeIcon = { coin:'🪙', us:'🇺🇸', kr:'🇰🇷' };
+  syncCard.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div class="card-title ct-blue" style="margin-bottom:0">📊 포트폴리오 연동 현황</div>
+      <span style="font-size:10px;color:var(--text3)">포트폴리오 탭 자산 기준 · 자동 반영</span>
+    </div>
+    <div class="pf-summary" style="margin-bottom:10px">
+      <div class="pf-mc"><div class="pf-ml">보유 자산 총액</div><div class="pf-mv blue">${pfFmtKRW(totalEvalKRW)}</div></div>
+      <div class="pf-mc"><div class="pf-ml">총 투자원금</div><div class="pf-mv">${pfFmtKRW(totalCostKRW)}</div></div>
+      <div class="pf-mc"><div class="pf-ml">평가손익</div><div class="pf-mv ${totalPnl>=0?'up':'dn'}">${(totalPnl>=0?'+':'')+pfFmtKRW(totalPnl)}</div></div>
+      <div class="pf-mc"><div class="pf-ml">총 수익률</div><div class="pf-mv ${totalPnl>=0?'up':'dn'}">${pfFmtPct(totalPct)}</div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto">
+      ${assetRows.map(r => `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg3);border-radius:8px">
+          <div style="font-size:13px;flex-shrink:0">${typeIcon[r.type]||'📈'}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:700;color:var(--text)">${r.name} <span style="font-size:10px;color:var(--text3);font-weight:400">${r.ticker}</span></div>
+            <div style="font-size:10px;color:var(--text3)">
+              평단 ${r.avgPrice>0?pfFmtKRW(r.avgPrice/1):'?'} · 
+              ${r.hasPrc?`현재가 ${pfFmtKRW(r.curPrice)}`:'가격 로딩중'}
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:12px;font-weight:800;color:${r.hasPrc?(r.pnl>=0?'var(--teal)':'var(--red)'):'var(--text2)'}">${r.hasPrc?(r.pnl>=0?'+':'')+pfFmtKRW(r.pnl):'시세 대기'}</div>
+            <div style="font-size:11px;font-weight:700;color:${r.hasPrc?(r.pct>=0?'var(--teal)':'var(--red)'):'var(--text3)'}">${r.hasPrc?pfFmtPct(r.pct):'- %'}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div style="margin-top:10px;padding:10px 12px;background:var(--info-bg);border:1px solid var(--info-border);border-radius:8px;font-size:11px;color:var(--info-text);line-height:1.7">
+      💡 포트폴리오 탭에서 자산을 추가·수정하면 이 카드가 자동으로 업데이트돼요.<br>
+      목표금액 탭의 <strong>목표 금액</strong>과 비교해서 현재 달성률을 확인해보세요.
+    </div>
+  `;
+
+  // 목표금액 진행률도 포트폴리오 총액으로 업데이트
+  const goal = +document.getElementById('goal').value;
+  if (goal > 0) {
+    const pct = Math.min(100, Math.round(totalEvalKRW / goal * 100));
+    const pb = document.getElementById('pb');
+    const pbPct = document.getElementById('pbPct');
+    const pbText = document.getElementById('pbText');
+    if (pb) pb.style.width = pct + '%';
+    if (pbPct) pbPct.textContent = pct + '%';
+    if (pbText) {
+      const remaining = Math.max(0, goal - totalEvalKRW);
+      pbText.textContent = pct >= 100 ? '🎉 목표 달성!' : `목표까지 ${pfFmtKRW(remaining)} 남음 (현재 ${pct}%)`;
+    }
+    const pbGoal = document.getElementById('pbGoal');
+    if (pbGoal) pbGoal.textContent = fmtW(goal);
+  }
+}
+
+/* pfRenderAssets, pfRefreshAll 후 연동 자동 호출 */
+const _origPfRenderAssets = typeof pfRenderAssets !== 'undefined' ? pfRenderAssets : null;
+const _origPfRefreshAll = typeof pfRefreshAll !== 'undefined' ? pfRefreshAll : null;
+
+/* =====================================================
+   INIT — 페이지 로드 시 실행
+   ===================================================== */
+// 1. 저장된 값 복원
+appLoadAll();
+
+// 2. 이벤트 바인딩
+onRegionChange(); onOwnershipChange(); onPurposeChange(); onRepayChange();
+renderBanks(); calcMortgage(); calcInvest(); calcSub(); onCityChange();
+
+// 3. 복원된 값으로 재계산
+setTimeout(() => {
+  calcInvest();
+  calcMortgage();
+  calcRequired && calcRequired();
+  calcConv();
+  calcConv2();
+  calcSub();
+  pfCalcTarget && pfCalcTarget();
+}, 100);
+
+// 4. 저장 이벤트 바인딩 (약간 지연: DOM 완전 로드 후)
+setTimeout(() => {
+  appBindSaveEvents();
+
+  // 포트폴리오 저장 데이터도 불러오기
+  if (typeof pfLoad === 'function') {
+    pfLoad();
+    pfRenderAssets && pfRenderAssets();
+    pfCalcSummary && pfCalcSummary();
+    pfCalcTarget && pfCalcTarget();
+    // 연동 카드
+    setTimeout(syncPortfolioToInvest, 300);
+  }
+
+  // 목표금액 슬라이더 초기값 반영
+  const goalEl = document.getElementById('goal');
+  if (goalEl) {
+    document.getElementById('goalV').textContent = fmtW(+goalEl.value);
+  }
+}, 200);
+
+// 5. 포트폴리오 탭 진입 시 연동 갱신
+const _origSwitchTab = switchTab;
+window.switchTab = function(t, btn) {
+  _origSwitchTab(t, btn);
+  if (t === 'invest') {
+    setTimeout(syncPortfolioToInvest, 400);
+  }
+};
+
+// 6. 저장 알림 (첫 방문 체크)
+if (!localStorage.getItem(APP_SAVE_KEY)) {
+  setTimeout(() => {
+    const notice = document.createElement('div');
+    notice.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1d27;border:1px solid rgba(79,127,255,.4);border-radius:10px;padding:10px 18px;font-size:12px;color:#7aa4ff;z-index:9999;font-family:inherit;box-shadow:0 4px 20px rgba(0,0,0,.4);white-space:nowrap';
+    notice.textContent = '💾 입력한 모든 값이 자동으로 저장돼요!';
+    document.body.appendChild(notice);
+    setTimeout(() => notice.remove(), 3000);
+  }, 1500);
+}
+
 </script>
 </body>
 </html>
