@@ -1093,7 +1093,7 @@ function switchSub(id,btn){
   else{const b=document.querySelector(`.sub-tab[onclick*="'${id}'"]`);if(b)b.classList.add('active');}
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.getElementById('sec-'+id).classList.add('active');
-  if(id==='invest')updateInvestInsight();
+  if(id==='invest'){updateInvestInsight();setTimeout(calcInvest,100);}
   if(id==='monthlog')renderLogs();
   if(id==='portfolio'){pfRenderAssets();pfRenderCashList();}
 }
@@ -1435,42 +1435,61 @@ async function pfFetchCoins(){const coins=S.pfAssets.filter(a=>a.type==='coin');
 
 /* US 시세: 병렬 fetch — 빠른 프록시 우선, 고가/저가 포함 */
 async function pfFetchOne(ticker){
-  const yUrl=`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=2d`;
+  const yUrl1=`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=2d`;
   const yUrl2=`https://query2.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=2d`;
-  const proxies=[
-    `https://api.allorigins.win/get?url=${encodeURIComponent(yUrl)}`,
-    `https://corsproxy.io/?url=${encodeURIComponent(yUrl2)}`,
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yUrl)}`,
-  ];
-  for(const proxy of proxies){
+
+  const tryProxy=async(url,ms)=>{
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),ms);
     try{
-      const ctrl=new AbortController();
-      const tid=setTimeout(()=>ctrl.abort(),6000);
-      const r=await fetch(proxy,{signal:ctrl.signal});
+      const r=await fetch(url,{signal:ctrl.signal});
       clearTimeout(tid);
-      if(!r.ok)continue;
+      if(!r.ok)return null;
       const w=await r.json();
       const raw=typeof w==='string'?w:(w.contents||JSON.stringify(w));
       const d=JSON.parse(raw);
       const meta=d?.chart?.result?.[0]?.meta;
-      if(!meta||!meta.regularMarketPrice)continue;
+      if(!meta||!meta.regularMarketPrice)return null;
       const cur=meta.regularMarketPrice;
       const prev=meta.chartPreviousClose||meta.previousClose||meta.regularMarketPreviousClose||cur;
-      const high=meta.regularMarketDayHigh||cur;
-      const low=meta.regularMarketDayLow||cur;
-      pfPrices[ticker]={price:cur,priceKRW:cur*pfUSDKRW,change:prev>0?((cur-prev)/prev*100):0,dir:cur>=prev?'RISE':'FALL',high,low};
-      return true;
-    }catch(e){}
-  }
+      return{price:cur,priceKRW:cur*pfUSDKRW,change:prev>0?((cur-prev)/prev*100):0,
+        dir:cur>=prev?'RISE':'FALL',high:meta.regularMarketDayHigh||cur,low:meta.regularMarketDayLow||cur};
+    }catch(e){clearTimeout(tid);return null;}
+  };
+
+  // 두 프록시를 동시에 경쟁 — 먼저 성공한 쪽 사용 (4초 타임아웃)
+  const p1=tryProxy(`https://api.allorigins.win/get?url=${encodeURIComponent(yUrl1)}`,4000);
+  const p2=tryProxy(`https://corsproxy.io/?url=${encodeURIComponent(yUrl2)}`,4000);
+  const result=await Promise.any([
+    p1.then(v=>{if(!v)return Promise.reject();return v;}),
+    p2.then(v=>{if(!v)return Promise.reject();return v;}),
+  ]).catch(()=>null);
+
+  if(result){pfPrices[ticker]=result;return true;}
+  // 둘 다 실패 시 마지막 fallback
+  const fb=await tryProxy(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yUrl1)}`,5000);
+  if(fb){pfPrices[ticker]=fb;return true;}
   return false;
 }
 async function pfFetchUS(){
   const us=S.pfAssets.filter(a=>a.type==='us');if(!us.length)return;
   const tickers=[...new Set(us.map(a=>a.ticker))];
+  // 전체 완전 병렬 — 하나가 느려도 다른 것들이 기다리지 않음
   await Promise.allSettled(tickers.map(tk=>pfFetchOne(tk)));
 }
 function pfSetStatus(type,txt){const pill=document.getElementById('pfPill');const dot=document.getElementById('pfDot');if(!pill)return;pill.className='status-pill '+type;dot.className='spd '+type;document.getElementById('pfTxt').textContent=txt;}
-async function pfRefreshAll(){pfSetStatus('loading','업데이트중...');await pfFetchFX();await pfFetchCoins();await pfFetchUS();pfRenderAssets();pfCalcSummary();if(curMain==='dashboard')updateDashboard();pfSetStatus('live',new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+'업데이트');pfCd=600;}
+async function pfRefreshAll(){
+  pfSetStatus('loading','업데이트중...');
+  // FX·코인·미국주식 동시 병렬 시작
+  const fxP=pfFetchFX();
+  const coinP=pfFetchCoins().then(()=>{pfRenderAssets();pfCalcSummary();});// 코인 먼저 오면 즉시 렌더
+  const usP=pfFetchUS().then(()=>{pfRenderAssets();pfCalcSummary();});  // 미국주식 오면 즉시 렌더
+  await Promise.allSettled([fxP,coinP,usP]);
+  pfRenderAssets();pfCalcSummary();
+  if(curMain==='dashboard')updateDashboard();
+  pfSetStatus('live',new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+'업데이트');
+  pfCd=600;
+}
 function pfStartTimer(){if(pfTimer)clearInterval(pfTimer);pfTimer=setInterval(()=>{pfCd--;const m=Math.floor(pfCd/60),s=pfCd%60;const el=document.getElementById('pfNext');if(el)el.textContent=`갱신 ${m}:${s.toString().padStart(2,'0')}`;if(pfCd<=0)pfRefreshAll();},1000);}
 
 /* 자산 데이터 */
@@ -1632,7 +1651,7 @@ function pfUpdateDep(id){
   setTimeout(calcInvest,200);
   notify('✅ 잔액 업데이트됨!');
 }
-function pfDelAsset(id){if(!confirm('삭제할까요?'))return;S.pfAssets=S.pfAssets.filter(a=>a.id!==id);pfSave();pfRenderAssets();pfCalcSummary();updateDashboard();}
+function pfDelAsset(id){if(!confirm('삭제할까요?'))return;S.pfAssets=S.pfAssets.filter(a=>a.id!==id);pfSave();pfRenderAssets();pfCalcSummary();updateDashboard();setTimeout(calcInvest,100);}
 function pfUpdateExit(id,field,val){const a=S.pfAssets.find(x=>x.id===id);if(!a)return;a[field]=parseFloat(val)||0;pfSave();pfRenderAssets();}
 
 /* 평균단가·수량·메모 수정 */
@@ -1907,16 +1926,16 @@ function calcNeedMonthly(curEval,monthly,goal){
 }
 
 function calcInvest(){
-  const goal=+document.getElementById('goal').value;
-  const monthlyAdd=+document.getElementById('monthlyAdd').value;
-  const annRate=+document.getElementById('expectedRate').value/100/12;
-  // 예수금은 pfCashAccounts에서 합산
+  const goalEl=document.getElementById('goal');
+  const goal=goalEl?+goalEl.value:(S.goal||0);
+  const monthlyEl=document.getElementById('monthlyAdd');
+  const monthlyAdd=monthlyEl?+monthlyEl.value:(S.monthly||0);
+  const rateEl=document.getElementById('expectedRate');
+  const annRate=rateEl?+rateEl.value/100/12:0.04/12;
   const cashKRW=(S.pfCashAccounts||[]).reduce((s,ac)=>s+pfCashToKRWNum(ac),0);
   const dr=annRate||0.04/12;
 
-  document.getElementById('pbGoal').textContent=fmtW(goal);
-
-  // 포트폴리오 총액 (코인+미국주식+한국주식+예금+예수금)
+  // 포트폴리오 총액
   let pfTotal=0,pfCost=0;
   S.pfAssets.forEach(a=>{
     const d=pfGetData(a);
@@ -1928,42 +1947,57 @@ function calcInvest(){
   const curTotal=pfTotal+obStock;
 
   // 달성 기간 계산
-  let dep=cashKRW,addDep=0;const dA=[Math.round(curTotal)],mos=[0];
+  let dep=cashKRW;const dA=[Math.round(curTotal)],mos=[0];
   let targetM=curTotal>=goal?0:null;
-  if(targetM===null){for(let i=1;i<=360;i++){dep=dep*(1+dr)+monthlyAdd;addDep+=monthlyAdd;dA.push(Math.round(dep+pfTotal-cashKRW));mos.push(i);if(dep+pfTotal-cashKRW>=goal){targetM=i;break;}}if(!targetM)targetM=360;}
+  if(goal>0&&targetM===null){
+    for(let i=1;i<=360;i++){
+      dep=dep*(1+dr)+monthlyAdd;
+      dA.push(Math.round(dep+pfTotal-cashKRW));
+      mos.push(i);
+      if(dep+pfTotal-cashKRW>=goal){targetM=i;break;}
+    }
+    if(!targetM)targetM=360;
+  }
 
-  // 결과 표시
-  const pct=goal>0?Math.min(100,Math.round(curTotal/goal*100)):0;
-  document.getElementById('pb').style.width=pct+'%';
-  document.getElementById('pbPct').textContent=pct+'%';
-  document.getElementById('pbTxt').textContent=targetM===0?'🎉 목표 달성!':fmtM(targetM)+' 후 달성 예정';
-  document.getElementById('investResult').style.display='block';
+  // 목표·시뮬레이션 탭 UI 업데이트 (탭이 활성일 때만 DOM 접근)
+  const pbEl=document.getElementById('pb');
+  if(pbEl&&goal>0){
+    const pct=Math.min(100,Math.round(curTotal/goal*100));
+    pbEl.style.width=pct+'%';
+    const pbPct=document.getElementById('pbPct');if(pbPct)pbPct.textContent=pct+'%';
+    const pbTxt=document.getElementById('pbTxt');if(pbTxt)pbTxt.textContent=targetM===0?'🎉 목표 달성!':fmtM(targetM)+' 후 달성 예정';
+    const pbGoal=document.getElementById('pbGoal');if(pbGoal)pbGoal.textContent=fmtW(goal);
+    const resEl=document.getElementById('investResult');if(resEl)resEl.style.display='block';
 
-  // 요약 카드
-  const achDate=targetM?new Date(new Date().setMonth(new Date().getMonth()+targetM)):null;
-  document.getElementById('investSummary').innerHTML=`
-    <div class="mc"><div class="ml">현재 자산</div><div class="mv blue">${fmtW(curTotal)}</div></div>
-    <div class="mc"><div class="ml">달성 기간</div><div class="mv teal">${targetM===0?'달성!':fmtM(targetM)}</div></div>
-    <div class="mc"><div class="ml">예상 달성일</div><div class="mv amber">${achDate?achDate.getFullYear()+'년 '+(achDate.getMonth()+1)+'월':'-'}</div></div>
-    <div class="mc"><div class="ml">현재 달성률</div><div class="mv">${pct}%</div></div>
-  `;
+    const achDate=targetM?new Date(new Date().setMonth(new Date().getMonth()+targetM)):null;
+    const sumEl=document.getElementById('investSummary');
+    if(sumEl)sumEl.innerHTML=`
+      <div class="mc"><div class="ml">현재 자산</div><div class="mv blue">${fmtW(curTotal)}</div></div>
+      <div class="mc"><div class="ml">달성 기간</div><div class="mv teal">${targetM===0?'달성!':fmtM(targetM)}</div></div>
+      <div class="mc"><div class="ml">예상 달성일</div><div class="mv amber">${achDate?achDate.getFullYear()+'년 '+(achDate.getMonth()+1)+'월':'-'}</div></div>
+      <div class="mc"><div class="ml">현재 달성률</div><div class="mv">${pct}%</div></div>`;
 
-  // 인사이트 자동 생성
-  const needRate=calcNeedMonthly(curTotal,monthlyAdd,goal);
-  let ins='';
-  if(pct>=100)ins=`<div class="insight good"><div class="insight-title">🎉 목표 달성!</div><div class="insight-body">현재 자산이 이미 목표를 달성했어요! 더 큰 목표를 세워볼 시간이에요.</div></div>`;
-  else if(needRate===null)ins=`<div class="insight bad"><div class="insight-title">⚠️ 목표 재조정 필요</div><div class="insight-body">현재 조건으로는 목표 달성이 어려워요. 목표금액을 낮추거나 달성일을 늘려보세요.</div></div>`;
-  else if(needRate<=1)ins=`<div class="insight good"><div class="insight-title">✅ 달성 가능한 목표</div><div class="insight-body">월 <strong>${needRate.toFixed(2)}%</strong>의 수익률로 달성 가능해요! 예금만으로도 충분한 현실적인 목표예요.</div></div>`;
-  else if(needRate<=3)ins=`<div class="insight good"><div class="insight-title">💪 도전 가능한 목표</div><div class="insight-body">월 <strong>${needRate.toFixed(2)}%</strong> (연 ${((Math.pow(1+needRate/100,12)-1)*100).toFixed(1)}%)가 필요해요. ETF 장기투자로 달성 가능한 수준이에요.</div></div>`;
-  else if(needRate<=7)ins=`<div class="insight warn"><div class="insight-title">🔥 적극적인 투자 필요</div><div class="insight-body">월 <strong>${needRate.toFixed(2)}%</strong>의 높은 수익률이 필요해요. 포트폴리오 전략을 점검해보세요.</div></div>`;
-  else ins=`<div class="insight bad"><div class="insight-title">🚨 목표 조정 권장</div><div class="insight-body">월 <strong>${needRate.toFixed(2)}%</strong>는 현실적으로 달성하기 매우 어려운 수익률이에요. 목표나 기간을 재설정하세요.</div></div>`;
-  document.getElementById('investAutoInsight').innerHTML=ins;
+    const needRate=calcNeedMonthly(curTotal,monthlyAdd,goal);
+    let ins='';
+    if(pct>=100)ins=`<div class="insight good"><div class="insight-title">🎉 목표 달성!</div><div class="insight-body">현재 자산이 이미 목표를 달성했어요! 더 큰 목표를 세워볼 시간이에요.</div></div>`;
+    else if(needRate===null)ins=`<div class="insight bad"><div class="insight-title">⚠️ 목표 재조정 필요</div><div class="insight-body">현재 조건으로는 달성이 어려워요. 목표금액을 낮추거나 달성일을 늘려보세요.</div></div>`;
+    else if(needRate<=1)ins=`<div class="insight good"><div class="insight-title">✅ 달성 가능한 목표</div><div class="insight-body">월 <strong>${needRate.toFixed(2)}%</strong>로 달성 가능해요! 예금만으로도 충분한 목표예요.</div></div>`;
+    else if(needRate<=3)ins=`<div class="insight good"><div class="insight-title">💪 도전 가능한 목표</div><div class="insight-body">월 <strong>${needRate.toFixed(2)}%</strong> (연 ${((Math.pow(1+needRate/100,12)-1)*100).toFixed(1)}%) — ETF 장기투자로 달성 가능해요.</div></div>`;
+    else if(needRate<=7)ins=`<div class="insight warn"><div class="insight-title">🔥 적극적인 투자 필요</div><div class="insight-body">월 <strong>${needRate.toFixed(2)}%</strong>의 높은 수익률이 필요해요. 전략을 점검해보세요.</div></div>`;
+    else ins=`<div class="insight bad"><div class="insight-title">🚨 목표 조정 권장</div><div class="insight-body">월 <strong>${needRate.toFixed(2)}%</strong>는 달성하기 매우 어려운 수익률이에요.</div></div>`;
+    const aiEl=document.getElementById('investAutoInsight');if(aiEl)aiEl.innerHTML=ins;
 
-  // 차트
-  const labels=mos.map(m=>m===0?'지금':m+'개월');
-  if(growthChart)growthChart.destroy();
-  growthChart=new Chart(document.getElementById('growthChart'),{type:'line',data:{labels,datasets:[{label:'예금',data:dA,borderColor:'#5b8aff',backgroundColor:'transparent',tension:.35,pointRadius:0,borderWidth:2.5},{label:'목표',data:Array(mos.length).fill(goal),borderColor:'#fbbf24',borderDash:[6,4],borderWidth:2,backgroundColor:'transparent',pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmtW(ctx.raw)}}},scales:{x:{ticks:{color:getTickC(),font:{size:10},maxTicksLimit:7,autoSkip:true},grid:{display:false}},y:{ticks:{color:getTickC(),font:{size:10},callback:v=>{const e=Math.floor(v/100000000);return e>0?e+'억':Math.floor(v/10000)+'만';}},grid:{color:getGridC()}}}}});
-
+    // 성장 차트
+    const chartEl=document.getElementById('growthChart');
+    if(chartEl){
+      const labels=mos.map(m=>m===0?'지금':m+'개월');
+      if(growthChart)growthChart.destroy();
+      growthChart=new Chart(chartEl,{type:'line',data:{labels,datasets:[
+        {label:'자산성장',data:dA,borderColor:'#5b8aff',backgroundColor:'rgba(91,138,255,.08)',tension:.35,pointRadius:0,borderWidth:2.5,fill:true},
+        {label:'목표',data:Array(mos.length).fill(goal),borderColor:'#fbbf24',borderDash:[6,4],borderWidth:2,backgroundColor:'transparent',pointRadius:0}
+      ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmtW(ctx.raw)}}},scales:{x:{ticks:{color:getTickC(),font:{size:10},maxTicksLimit:7,autoSkip:true},grid:{display:false}},y:{ticks:{color:getTickC(),font:{size:10},callback:v=>{const e=Math.floor(v/100000000);return e>0?e+'억':Math.floor(v/10000)+'만';}},grid:{color:getGridC()}}}}});
+    }
+  }
   S.goal=goal;save();
   updateDashboard();
 }
@@ -2057,6 +2091,7 @@ function updateDashboard(){
   const goal=S.goal||+document.getElementById('goal')?.value||1;
   const curT=total||S.saving+S.stock||0;
   const gPct=Math.min(100,Math.round(curT/goal*100));
+  const remaining=Math.max(0,goal-curT);   // ← remaining 먼저 선언
   document.getElementById('dashGoalPb').style.width=gPct+'%';
   document.getElementById('dashGoalPbLeft').textContent=`현재 ${gPct}%`;
   document.getElementById('dashGoalPbRight').textContent='목표 '+fmtW(goal);
@@ -2077,7 +2112,6 @@ function updateDashboard(){
   }
 
   // 남은 금액
-  const remaining=Math.max(0,goal-curT);
   document.getElementById('dashRemain').textContent=remaining>0?fmtW(remaining):'달성!';
   document.getElementById('dashTargetDate').textContent=S.targetDate?fmtDate(S.targetDate)+' 목표':'날짜 미설정';
 
@@ -2349,8 +2383,8 @@ function initApp(){
   pfRenderAssets();pfCalcSummary();
   ['coin','us','kr','dep','cash'].forEach(t=>{const el=document.getElementById('pfAdd-'+t);if(el)el.style.display=t==='dep'?'block':'none'});
 
-  // 차트
-  setTimeout(()=>{calcInvest();calcSub();},300);
+  // 차트 (DOM 완전히 로드된 후)
+  setTimeout(()=>{calcInvest();calcSub();},500);
 
   // 시세 로드
   pfRefreshAll();pfStartTimer();
