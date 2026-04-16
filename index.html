@@ -482,7 +482,7 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:8px">
       <button class="tb-btn" id="backBtn" onclick="goBack()" style="display:none;padding:6px 10px;font-size:16px;border-radius:8px">←</button>
-      <div class="topbar-brand" onclick="goToDashboard()">💰 <span id="topbarName">raf</span></div>
+      <div class="topbar-brand" onclick="goToDashboard()">💰 <span id="topbarName">raf</span> <span style="font-size:9px;font-weight:600;color:var(--text3);background:var(--bg3);border:1px solid var(--border2);border-radius:99px;padding:2px 7px;letter-spacing:.03em">v14</span></div>
     </div>
     <div class="topbar-right">
       <button class="tb-btn" onclick="goToDashboard()" style="background:var(--info-bg);border-color:var(--info-border);color:var(--blue);font-weight:700">🏠 홈</button>
@@ -554,6 +554,8 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
             <div style="margin-top:10px;font-size:12px;font-weight:700;color:var(--teal);background:rgba(45,212,160,.15);border-radius:99px;padding:5px 12px;display:inline-block">바로가기 →</div>
           </div>
         </div>
+        <!-- 빠른 현황 카드 4개 -->
+        <div class="dash-grid" style="margin-bottom:16px">
           <div class="dash-card blue clickable" onclick="switchMain('asset');switchSub('invest')">
             <div class="dash-card-icon">🎯</div>
             <div class="dash-card-label">목표 달성까지</div>
@@ -594,7 +596,7 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
         </div>
         <!-- 인사이트 -->
         <div id="dashInsights"></div>
-      </div>
+      </div><!-- /sec-dashboard -->
 
       <!-- ===== 포트폴리오 ===== -->
       <div id="sec-portfolio" class="section">
@@ -612,18 +614,16 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
           <div class="mc"><div class="ml">평가손익</div><div class="mv" id="pfPnl">-</div></div>
           <div class="mc"><div class="ml">총 수익률</div><div class="mv" id="pfPct">-</div></div>
         </div>
-        <!-- 예수금 입력 -->
-        <div class="card" style="padding:12px 16px;margin-bottom:12px">
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <div style="font-size:11px;font-weight:700;color:var(--text2);white-space:nowrap">💵 예수금 (증권계좌 현금)</div>
-            <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:160px">
-              <input type="number" id="pfCash" placeholder="0" min="0"
-                style="flex:1;padding:7px 10px;border:1.5px solid var(--border2);border-radius:9px;background:var(--bg3);color:var(--text);font-size:13px;font-family:inherit;outline:none;-moz-appearance:textfield;transition:border .15s"
-                oninput="pfSaveCash()">
-              <span style="font-size:11px;color:var(--text3);white-space:nowrap">만원</span>
-            </div>
-            <div style="font-size:10px;color:var(--text3)">총자산에 포함</div>
-            <div class="mv blue" id="pfCashDisp" style="font-size:12px;font-weight:700">-</div>
+
+        <!-- 예수금 (계좌별) -->
+        <div class="card" style="padding:12px 14px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-size:11px;font-weight:700;color:var(--text2)">💵 예수금 <span style="font-size:9px;font-weight:400;color:var(--text3)">(증권·거래소 계좌 현금 — 총 자산에 포함)</span></div>
+            <button onclick="pfAddCashRow()" style="font-size:10px;font-weight:700;color:var(--blue);background:var(--info-bg);border:1px solid var(--info-border);border-radius:99px;padding:3px 10px;cursor:pointer;font-family:inherit">+ 계좌 추가</button>
+          </div>
+          <div id="pfCashList" style="display:flex;flex-direction:column;gap:6px"></div>
+          <div style="margin-top:6px;display:flex;justify-content:flex-end;gap:16px;font-size:11px;color:var(--text2)">
+            <span>합계: <strong id="pfCashTotal" style="color:var(--blue)">0원</strong></span>
           </div>
         </div>
         <!-- 자산 목록 -->
@@ -664,7 +664,7 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
             </div>
             <button class="btn primary" onclick="pfAddAssetDep()" style="margin-top:4px">+ 예금·적금 추가하기</button>
           </div>
-          <!-- 미국주식 (기본) -->
+          <!-- 미국주식 -->
           <div id="pfAdd-us" class="add-form" style="display:none">
             <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">🇺🇸 미국주식 — Yahoo Finance 15분 지연</div>
             <div class="irow">
@@ -729,8 +729,8 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
             </div>
             <button class="btn primary" onclick="pfAddAsset('coin')" style="margin-top:4px">+ 코인 추가하기</button>
           </div>
-          <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:4px">💾 모든 데이터 자동저장 · <button onclick="pfExport()" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:11px;font-weight:700;font-family:inherit">JSON 백업</button></div>
-        </div>
+        <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:4px">💾 모든 데이터 자동저장 · <button onclick="pfExport()" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:11px;font-weight:700;font-family:inherit">JSON 백업</button></div>
+      </div>
 
       <!-- ===== 목표·시뮬레이션 ===== -->
       <div id="sec-invest" class="section">
@@ -1056,9 +1056,9 @@ function goToDashboard(){
 }
 function switchMain(tab,btn){
   curMain=tab;
-  // 대시보드 섹션 명시적 비활성화
-  const dash=document.getElementById('sec-dashboard');
-  if(dash)dash.classList.remove('active');
+  // 대시보드 섹션 명시적 비활성화 (중복 표시 버그 방지)
+  const dashSec=document.getElementById('sec-dashboard');
+  if(dashSec)dashSec.classList.remove('active');
   document.querySelectorAll('.main-tab').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   else{const b=document.querySelector(`.main-tab[onclick*="'${tab}'"]`);if(b)b.classList.add('active');}
@@ -1078,12 +1078,12 @@ function switchSub(id,btn){
   document.getElementById('sec-'+id).classList.add('active');
   if(id==='invest')updateInvestInsight();
   if(id==='monthlog')renderLogs();
-  if(id==='portfolio')pfRenderAssets();
+  if(id==='portfolio'){pfRenderAssets();pfRenderCashList();}
 }
 function showDashboard(){goToDashboard();}
 
 /* ===================== PORTFOLIO DATA ===================== */
-let pfPrices={}, pfUSDKRW=S.usdKrw||1380, pfTimer=null, pfCd=600, pfTypeF='all', pfAddT='coin';
+let pfPrices={}, pfUSDKRW=S.usdKrw||1380, pfTimer=null, pfCd=600, pfTypeF='all', pfAddT='dep';
 let pfFocusIdx={coin:-1,us:-1,kr:-1};
 
 /* ===== 미국주식 DB (200+) ===== */
@@ -1416,37 +1416,32 @@ function pfExport(){const b=new Blob([JSON.stringify({assets:S.pfAssets,logs:S.p
 async function pfFetchFX(){try{const r=await fetch('https://open.er-api.com/v6/latest/USD');if(!r.ok)throw 0;const d=await r.json();pfUSDKRW=d.rates.KRW;S.usdKrw=pfUSDKRW;save();document.getElementById('pfFxTxt').textContent='$1 = '+(pfUSDKRW|0).toLocaleString()+'원';}catch(e){document.getElementById('pfFxTxt').textContent='$1 ≈ '+(pfUSDKRW|0).toLocaleString()+'원 (기본값)';}}
 async function pfFetchCoins(){const coins=S.pfAssets.filter(a=>a.type==='coin');if(!coins.length)return;const tks=[...new Set(coins.map(a=>'KRW-'+a.ticker))].join(',');try{const r=await fetch('https://api.upbit.com/v1/ticker?markets='+tks);if(!r.ok)throw 0;const data=await r.json();data.forEach(d=>{const tk=d.market.replace('KRW-','');pfPrices[tk]={price:d.trade_price,change:d.change_rate*100,dir:d.change,high:d.high_price,low:d.low_price};});}catch(e){}}
 
-/* US 시세: 병렬 fetch로 버그 수정 — 순차 호출 시 두번째부터 실패하는 문제 해결 */
+/* US 시세: 병렬 fetch — 빠른 프록시 우선, 고가/저가 포함 */
 async function pfFetchOne(ticker){
-  // 여러 프록시를 경쟁적으로 시도 (가장 빠른 것 사용)
-  const yahooUrl=`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=2d`;
-  const yahooUrl2=`https://query2.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=2d`;
+  const yUrl=`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=2d`;
+  const yUrl2=`https://query2.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=2d`;
   const proxies=[
-    `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`,
-    `https://corsproxy.io/?url=${encodeURIComponent(yahooUrl2)}`,
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yahooUrl)}`,
+    `https://api.allorigins.win/get?url=${encodeURIComponent(yUrl)}`,
+    `https://corsproxy.io/?url=${encodeURIComponent(yUrl2)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yUrl)}`,
   ];
-
-  // 첫 번째 프록시를 먼저 빠르게 시도, 실패하면 나머지 순차 시도
   for(const proxy of proxies){
     try{
       const ctrl=new AbortController();
-      const to=setTimeout(()=>ctrl.abort(),6000);
+      const tid=setTimeout(()=>ctrl.abort(),6000);
       const r=await fetch(proxy,{signal:ctrl.signal});
-      clearTimeout(to);
+      clearTimeout(tid);
       if(!r.ok)continue;
       const w=await r.json();
-      let raw;
-      if(typeof w==='string') raw=w;
-      else if(w.contents) raw=w.contents;
-      else raw=JSON.stringify(w);
+      const raw=typeof w==='string'?w:(w.contents||JSON.stringify(w));
       const d=JSON.parse(raw);
-      const meta=d?.chart?.result?.[0]?.meta;if(!meta||!meta.regularMarketPrice)continue;
+      const meta=d?.chart?.result?.[0]?.meta;
+      if(!meta||!meta.regularMarketPrice)continue;
       const cur=meta.regularMarketPrice;
       const prev=meta.chartPreviousClose||meta.previousClose||meta.regularMarketPreviousClose||cur;
       const high=meta.regularMarketDayHigh||cur;
       const low=meta.regularMarketDayLow||cur;
-      pfPrices[ticker]={price:cur,priceKRW:cur*pfUSDKRW,change:prev>0?((cur-prev)/prev*100):0,dir:cur>=(prev||cur)?'RISE':'FALL',high,low};
+      pfPrices[ticker]={price:cur,priceKRW:cur*pfUSDKRW,change:prev>0?((cur-prev)/prev*100):0,dir:cur>=prev?'RISE':'FALL',high,low};
       return true;
     }catch(e){}
   }
@@ -1455,7 +1450,6 @@ async function pfFetchOne(ticker){
 async function pfFetchUS(){
   const us=S.pfAssets.filter(a=>a.type==='us');if(!us.length)return;
   const tickers=[...new Set(us.map(a=>a.ticker))];
-  // 전체 병렬 처리 (각자 타임아웃 있으므로 안전)
   await Promise.allSettled(tickers.map(tk=>pfFetchOne(tk)));
 }
 function pfSetStatus(type,txt){const pill=document.getElementById('pfPill');const dot=document.getElementById('pfDot');if(!pill)return;pill.className='status-pill '+type;dot.className='spd '+type;document.getElementById('pfTxt').textContent=txt;}
@@ -1480,12 +1474,64 @@ function pfGetData(a){
   return{curKRW,avgKRW,evalKRW,costKRW,pnlKRW,pct,change:p?p.change:null,dir:p?p.dir:null,hasPrc:curKRW>0};
 }
 
-function pfSaveCash(){
-  const v=parseFloat(document.getElementById('pfCash')?.value)||0;
-  S.pfCash=v*10000;save();
-  const disp=document.getElementById('pfCashDisp');
-  if(disp) disp.textContent=v>0?fmtW(v*10000):'-';
-  pfCalcSummary();updateDashboard();
+/* ===================== 예수금 (다중 계좌) ===================== */
+function pfRenderCashList(){
+  const list=document.getElementById('pfCashList');if(!list)return;
+  const accounts=S.pfCashAccounts||[];
+  if(!accounts.length){
+    list.innerHTML=`<div style="text-align:center;padding:8px;font-size:11px;color:var(--text3)">+ 계좌 추가 버튼으로 예수금을 입력하세요</div>`;
+    document.getElementById('pfCashTotal').textContent='0원';
+    return;
+  }
+  list.innerHTML=accounts.map((ac,i)=>`
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <input type="text" value="${ac.name}" placeholder="계좌명 (예: 키움 원화)" 
+        style="flex:1;min-width:90px;padding:6px 9px;border:1.5px solid var(--border2);border-radius:8px;background:var(--bg3);color:var(--text);font-size:12px;font-family:inherit;outline:none"
+        oninput="pfUpdateCash(${i},'name',this.value)">
+      <input type="number" value="${ac.amount}" placeholder="금액" min="0"
+        style="width:110px;padding:6px 9px;border:1.5px solid var(--border2);border-radius:8px;background:var(--bg3);color:var(--text);font-size:12px;font-family:inherit;outline:none;-moz-appearance:textfield"
+        oninput="pfUpdateCash(${i},'amount',this.value)">
+      <select onchange="pfUpdateCash(${i},'currency',this.value)"
+        style="padding:6px 8px;border:1.5px solid var(--border2);border-radius:8px;background:var(--bg3);color:var(--text);font-size:11px;font-family:inherit;outline:none">
+        <option value="KRW" ${ac.currency==='KRW'?'selected':''}>원화 ₩</option>
+        <option value="USD" ${ac.currency==='USD'?'selected':''}>달러 $</option>
+        <option value="USDT" ${ac.currency==='USDT'?'selected':''}>USDT</option>
+        <option value="BTC" ${ac.currency==='BTC'?'selected':''}>BTC</option>
+      </select>
+      <span style="font-size:10px;color:var(--text3);min-width:70px;text-align:right">${pfCashToKRW(ac)}</span>
+      <button onclick="pfDelCash(${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:2px 4px" title="삭제">✕</button>
+    </div>
+  `).join('');
+  const total=accounts.reduce((s,ac)=>s+pfCashToKRWNum(ac),0);
+  document.getElementById('pfCashTotal').textContent=fmtW(total);
+}
+function pfCashToKRWNum(ac){
+  const amt=parseFloat(ac.amount)||0;
+  if(ac.currency==='KRW')return amt*10000;
+  if(ac.currency==='USD'||ac.currency==='USDT')return amt*pfUSDKRW;
+  if(ac.currency==='BTC'){const p=pfPrices['BTC'];return p?amt*p.price:0;}
+  return amt*10000;
+}
+function pfCashToKRW(ac){
+  const v=pfCashToKRWNum(ac);
+  if(!v)return '-';
+  return fmtW(Math.round(v));
+}
+function pfAddCashRow(){
+  if(!S.pfCashAccounts)S.pfCashAccounts=[];
+  S.pfCashAccounts.push({name:'',amount:'',currency:'KRW'});
+  save();pfRenderCashList();pfCalcSummary();
+}
+function pfUpdateCash(i,field,val){
+  if(!S.pfCashAccounts)S.pfCashAccounts=[];
+  if(!S.pfCashAccounts[i])return;
+  S.pfCashAccounts[i][field]=val;
+  save();pfRenderCashList();pfCalcSummary();updateDashboard();
+}
+function pfDelCash(i){
+  if(!S.pfCashAccounts)return;
+  S.pfCashAccounts.splice(i,1);
+  save();pfRenderCashList();pfCalcSummary();updateDashboard();
 }
 
 /* 요약 */
@@ -1495,8 +1541,9 @@ function pfCalcSummary(){
     if(a.type==='dep'){te+=a.balance||0;tc+=a.balance||0;}
     else{const d=pfGetData(a);te+=d.evalKRW||d.costKRW;tc+=d.costKRW;}
   });
-  const cash=S.pfCash||0;
-  te+=cash;tc+=cash;
+  // 예수금 합산
+  const cashKRW=(S.pfCashAccounts||[]).reduce((s,ac)=>s+pfCashToKRWNum(ac),0);
+  te+=cashKRW;tc+=cashKRW;
   const pnl=te-tc,pct=tc>0?pnl/tc*100:0;
   const el=id=>document.getElementById(id);
   if(el('pfTotal'))el('pfTotal').textContent=fmtW(te);
@@ -1538,80 +1585,63 @@ function pfUpdateDep(id){
 function pfDelAsset(id){if(!confirm('삭제할까요?'))return;S.pfAssets=S.pfAssets.filter(a=>a.id!==id);pfSave();pfRenderAssets();pfCalcSummary();updateDashboard();}
 function pfUpdateExit(id,field,val){const a=S.pfAssets.find(x=>x.id===id);if(!a)return;a[field]=parseFloat(val)||0;pfSave();pfRenderAssets();}
 
-/* ===================== 참고용 지지선·저항선 분석 ===================== */
+/* ===================== 참고용 지지·저항 분석 ===================== */
 function pfAnalysisComment(a, d, tp, sl){
   if(a.type==='dep') return '';
   const avg=a.avgPrice;
   if(!avg||avg<=0) return '';
-
   let lines=[];
-  const ref='⚠️ <span style="color:var(--amber);font-weight:700">[참고용]</span> ';
+  const ref='<span style="color:var(--amber);font-weight:700">⚠️ [참고용]</span> ';
 
   // 평단 대비 현재가 위치 분석
-  if(d.hasPrc && d.curKRW>0){
-    const cur = a.type==='us' ? (pfPrices[a.ticker]?.price||0) : d.curKRW;
-    const avgRef = a.type==='us' ? avg : avg; // avgPrice 기준
-    const distPct = ((d.curKRW - d.avgKRW)/d.avgKRW*100);
+  if(d.hasPrc && d.avgKRW>0){
+    const distPct=((d.curKRW-d.avgKRW)/d.avgKRW*100);
     let posMsg='';
-    if(distPct>=tp*0.9) posMsg=`현재가가 익절 목표(+${tp}%)에 <strong>거의 도달</strong>했어요`;
-    else if(distPct>=tp*0.5) posMsg=`평단 대비 <strong>+${distPct.toFixed(1)}%</strong> 상승 중 — 익절 목표까지 ${(tp-distPct).toFixed(1)}% 남음`;
-    else if(distPct>0) posMsg=`평단 대비 <strong>+${distPct.toFixed(1)}%</strong> 소폭 상승`;
-    else if(distPct>=-sl*0.5) posMsg=`평단 대비 <strong>${distPct.toFixed(1)}%</strong> 소폭 하락 — 손절선까지 ${(sl+distPct).toFixed(1)}% 여유`;
-    else if(distPct>-sl) posMsg=`평단 대비 <strong>${distPct.toFixed(1)}%</strong> — 손절 기준(-${sl}%)에 <strong>근접 중</strong>`;
-    else posMsg=`평단 대비 <strong>${distPct.toFixed(1)}%</strong> 손절 기준 하회 — 전략 점검 필요`;
+    if(distPct>=tp*0.9)      posMsg=`현재가가 익절 목표(+${tp}%)에 <strong>거의 도달</strong>했어요`;
+    else if(distPct>=tp*0.5) posMsg=`평단 대비 <strong>+${distPct.toFixed(1)}%</strong> 상승 중 — 익절까지 ${(tp-distPct).toFixed(1)}% 남음`;
+    else if(distPct>0)       posMsg=`평단 대비 <strong>+${distPct.toFixed(1)}%</strong> 소폭 상승`;
+    else if(distPct>=-sl*0.5)posMsg=`평단 대비 <strong>${distPct.toFixed(1)}%</strong> 소폭 하락 — 손절선까지 ${(sl+distPct).toFixed(1)}% 여유`;
+    else if(distPct>-sl)     posMsg=`평단 대비 <strong>${distPct.toFixed(1)}%</strong> — 손절 기준(-${sl}%)에 <strong>근접</strong>`;
+    else                     posMsg=`평단 대비 <strong>${distPct.toFixed(1)}%</strong> — 손절선 하회, 전략 점검 필요`;
     if(posMsg) lines.push(ref+'평단 분석: '+posMsg);
   }
 
-  // 24시간 고가/저가 기반 지지·저항 분석 (코인: 업비트, 미국주식: Yahoo)
+  // 고가/저가 기반 지지·저항 (코인: 업비트 24H, 미국주식: Yahoo 당일)
   const p=pfPrices[a.ticker];
-  if(p && p.high && p.low && p.high>0 && p.low>0){
+  if(p && p.high && p.low && p.high>p.low){
     const high=p.high, low=p.low;
-    const mid=(high+low)/2;
+    const cur=a.type==='us'?p.price:d.curKRW;
+    const src=a.type==='coin'?'업비트 24H':'Yahoo Finance 당일';
 
-    let rangeMsg='';
-    if(a.type==='coin'){
-      const cur=d.curKRW;
-      rangeMsg=`업비트 24H 고가 <strong>${high.toLocaleString()}원</strong> / 저가 <strong>${low.toLocaleString()}원</strong>`;
-      if(cur>0){
-        const posInRange=((cur-low)/(high-low)*100);
-        const resistGap=((high-cur)/cur*100).toFixed(1);
-        const supportGap=((cur-low)/cur*100).toFixed(1);
-        if(posInRange>=80) rangeMsg+=` — 현재가가 고가 근처, 단기 저항 주의 (저항까지 ${resistGap}%)`;
-        else if(posInRange<=20) rangeMsg+=` — 현재가가 저가 근처, 지지 확인 필요 (지지까지 ${supportGap}%)`;
-        else rangeMsg+=` — 현재가 레인지 중간 위치 (고가 -${resistGap}% / 저가 +${supportGap}%)`;
-      }
-    } else if(a.type==='us'){
-      const cur=p.price;
-      rangeMsg=`Yahoo Finance 당일 고가 <strong>$${high.toFixed(2)}</strong> / 저가 <strong>$${low.toFixed(2)}</strong>`;
-      if(cur>0){
-        const posInRange=((cur-low)/(high-low)*100);
-        const resistGap=((high-cur)/cur*100).toFixed(1);
-        const supportGap=((cur-low)/cur*100).toFixed(1);
-        if(posInRange>=80) rangeMsg+=` — 당일 고점 근처, 단기 저항 주의 (저항까지 ${resistGap}%)`;
-        else if(posInRange<=20) rangeMsg+=` — 당일 저점 근처, 지지 확인 필요 (지지까지 ${supportGap}%)`;
-        else rangeMsg+=` — 당일 레인지 중간 (고점 -${resistGap}% / 저점 +${supportGap}%)`;
-      }
-    }
-    if(rangeMsg) lines.push(ref+'지지·저항: '+rangeMsg);
+    if(cur>0){
+      const rangeW=high-low;
+      const posInRange=((cur-low)/rangeW*100);
+      const toHigh=((high-cur)/cur*100).toFixed(1);
+      const toLow=((cur-low)/cur*100).toFixed(1);
+      let rangeMsg='';
+      if(posInRange>=80)      rangeMsg=`${src} 고점 근처 (고점까지 ${toHigh}%) — 단기 저항 주의`;
+      else if(posInRange<=20) rangeMsg=`${src} 저점 근처 (저점까지 ${toLow}%) — 지지 여부 확인 필요`;
+      else                    rangeMsg=`${src} 레인지 중간 (고점 -${toHigh}% / 저점 +${toLow}%)`;
 
-    // 피봇 기반 제안
-    const pivot=(high+low+(a.type==='us'?p.price:d.curKRW))/3;
-    const r1=2*pivot-low, s1=2*pivot-high;
-    let pivotStr='';
-    if(a.type==='coin'){
-      pivotStr=`피봇 포인트 기준 — 저항(R1): <strong>${Math.round(r1).toLocaleString()}원</strong> / 지지(S1): <strong>${Math.round(s1).toLocaleString()}원</strong>`;
-    } else if(a.type==='us'){
-      pivotStr=`피봇 포인트 기준 — 저항(R1): <strong>$${r1.toFixed(2)}</strong> / 지지(S1): <strong>$${s1.toFixed(2)}</strong>`;
+      const highFmt=a.type==='us'?`$${high.toFixed(2)}`:`${high.toLocaleString()}원`;
+      const lowFmt=a.type==='us'?`$${low.toFixed(2)}`:`${low.toLocaleString()}원`;
+      lines.push(ref+`고가 <strong>${highFmt}</strong> / 저가 <strong>${lowFmt}</strong> — ${rangeMsg}`);
+
+      // 피봇 포인트 R1 / S1
+      const pivot=(high+low+cur)/3;
+      const r1=2*pivot-low, s1=2*pivot-high;
+      const r1fmt=a.type==='us'?`$${r1.toFixed(2)}`:`${Math.round(r1).toLocaleString()}원`;
+      const s1fmt=a.type==='us'?`$${s1.toFixed(2)}`:`${Math.round(s1).toLocaleString()}원`;
+      lines.push(ref+`피봇 기준 — 저항(R1): <strong>${r1fmt}</strong> / 지지(S1): <strong>${s1fmt}</strong>`);
     }
-    if(pivotStr) lines.push(ref+pivotStr);
   } else if(a.type==='us' && !p){
-    lines.push(ref+'<span style="color:var(--text3)">시세 미수신 — 🔄 버튼으로 새로고침 후 분석 표시</span>');
+    lines.push(ref+'<span style="color:var(--text3)">시세 미수신 — 🔄 새로고침 후 분석 표시</span>');
   }
 
   if(!lines.length) return '';
-  return `<div style="background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.25);border-radius:9px;padding:10px 12px;margin-top:8px;margin-bottom:2px">
-    <div style="font-size:10px;font-weight:700;color:var(--amber);margin-bottom:6px;letter-spacing:.03em">📊 지지·저항 참고 분석 <span style="font-size:9px;font-weight:400;color:var(--text3)">(투자 결정의 참고용이며 정확도를 보장하지 않습니다)</span></div>
-    ${lines.map(l=>`<div style="font-size:11px;color:var(--text2);line-height:1.75;margin-bottom:3px">${l}</div>`).join('')}
+  return `<div style="background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.25);border-radius:9px;padding:10px 12px;margin-top:8px">
+    <div style="font-size:10px;font-weight:700;color:var(--amber);margin-bottom:5px;letter-spacing:.03em">📊 지지·저항 참고 분석 <span style="font-size:9px;font-weight:400;color:var(--text3)">(투자 판단의 참고용이며, 정확도를 보장하지 않습니다)</span></div>
+    ${lines.map(l=>`<div style="font-size:11px;color:var(--text2);line-height:1.8;margin-bottom:2px">${l}</div>`).join('')}
   </div>`;
 }
 
@@ -1788,30 +1818,29 @@ function calcNeedMonthly(curEval,monthly,goal){
 
 function calcInvest(){
   const goal=+document.getElementById('goal').value;
-  // depBal, dm, dr, goalDate는 레거시 필드(이전 버전 잔재) — pfCash와 예금 자산으로 대체
-  const depBal=(S.pfCash||0);  // 예수금
-  const dm=+document.getElementById('monthlyAdd')?.value||0;  // 월 납입은 monthlyAdd와 통합
-  const dr=+document.getElementById('expectedRate')?.value/100/12||0.04/12;
   const monthlyAdd=+document.getElementById('monthlyAdd').value;
   const annRate=+document.getElementById('expectedRate').value/100/12;
+  // 예수금은 pfCashAccounts에서 합산
+  const cashKRW=(S.pfCashAccounts||[]).reduce((s,ac)=>s+pfCashToKRWNum(ac),0);
+  const dr=annRate||0.04/12;
 
   document.getElementById('pbGoal').textContent=fmtW(goal);
 
-  // 포트폴리오 총액 가져오기 (코인+미국주식+한국주식+예금 전체)
+  // 포트폴리오 총액 (코인+미국주식+한국주식+예금+예수금)
   let pfTotal=0,pfCost=0;
   S.pfAssets.forEach(a=>{
     const d=pfGetData(a);
     if(a.type==='dep'){pfTotal+=a.balance||0;pfCost+=a.balance||0;}
     else{pfTotal+=d.evalKRW>0?d.evalKRW:d.costKRW;pfCost+=d.costKRW;}
   });
-  // onboarding에서 입력한 stock이 아직 포트폴리오에 미입력 시만 반영
+  pfTotal+=cashKRW;pfCost+=cashKRW;
   const obStock=S.pfAssets.length===0?(S.stock||0):0;
-  const curTotal=depBal+pfTotal+obStock;
+  const curTotal=pfTotal+obStock;
 
   // 달성 기간 계산
-  let dep=depBal,addDep=0;const dA=[dep],mos=[0];
+  let dep=cashKRW,addDep=0;const dA=[Math.round(curTotal)],mos=[0];
   let targetM=curTotal>=goal?0:null;
-  if(targetM===null){for(let i=1;i<=360;i++){dep=dep*(1+dr)+dm;addDep+=dm;dA.push(Math.round(dep));mos.push(i);if(dep+pfTotal>=goal){targetM=i;break;}}if(!targetM)targetM=360;}
+  if(targetM===null){for(let i=1;i<=360;i++){dep=dep*(1+dr)+monthlyAdd;addDep+=monthlyAdd;dA.push(Math.round(dep+pfTotal-cashKRW));mos.push(i);if(dep+pfTotal-cashKRW>=goal){targetM=i;break;}}if(!targetM)targetM=360;}
 
   // 결과 표시
   const pct=goal>0?Math.min(100,Math.round(curTotal/goal*100)):0;
@@ -1856,7 +1885,7 @@ function updateInvestInsight(){
   el.innerHTML=`<div class="insight info" style="margin-bottom:12px"><div class="insight-title">📊 포트폴리오 기반 분석</div><div class="insight-body">현재 총 자산 <strong>${fmtW(getPfTotal())}</strong> 기준, 목표 달성을 위해 필요한 월 수익률은 <strong>${needRate?needRate.toFixed(2)+'%':'-'}</strong>예요.</div></div>`;
 }
 function getPfTotal(){
-  let t=S.pfCash||0;
+  let t=(S.pfCashAccounts||[]).reduce((s,ac)=>s+pfCashToKRWNum(ac),0);
   S.pfAssets.forEach(a=>{
     if(a.type==='dep') t+=a.balance||0;
     else{const d=pfGetData(a);t+=d.evalKRW>0?d.evalKRW:d.costKRW;}
@@ -1926,7 +1955,6 @@ function delLog(month){if(!confirm('삭제?'))return;S.pfLogs=S.pfLogs.filter(l=
 /* ===================== DASHBOARD ===================== */
 function updateDashboard(){
   const sm=pfCalcSummary();
-  // 예수금은 pfCash에서 가져옴 (pfCalcSummary에 이미 포함됨)
   const total=sm.te;const cost=sm.tc;
   const pnl=sm.pnl;const pct=cost>0?pnl/cost*100:0;
 
@@ -2184,16 +2212,8 @@ function initApp(){
   renderBanks();calcMortgage();calcConv();calcConv2();calcSub();onCityChange();
 
   // 포트폴리오 초기화 — 기본 탭: 예금·적금
-  pfRenderAssets();pfCalcSummary();
+  pfRenderAssets();pfCalcSummary();pfRenderCashList();
   ['coin','us','kr','dep'].forEach(t=>{const el=document.getElementById('pfAdd-'+t);if(el)el.style.display=t==='dep'?'block':'none';});
-
-  // 예수금 복원
-  if(S.pfCash){
-    const cashEl=document.getElementById('pfCash');
-    if(cashEl){cashEl.value=Math.round((S.pfCash||0)/10000)||'';}
-    const dispEl=document.getElementById('pfCashDisp');
-    if(dispEl&&S.pfCash>0)dispEl.textContent=fmtW(S.pfCash);
-  }
 
   // 차트
   setTimeout(()=>{calcInvest();calcSub();},300);
