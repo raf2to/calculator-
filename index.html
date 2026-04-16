@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" data-theme="dark">
+<html lang="ko" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -128,6 +128,10 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
 .am-pct{font-size:10px;font-weight:700}
 .am-pct.up{color:var(--teal)}.am-pct.dn{color:var(--red)}
 
+/* CONFETTI */
+.confetti-wrap{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden}
+.confetti-piece{position:absolute;width:10px;height:10px;top:-10px;border-radius:2px;animation:confettiFall linear forwards}
+@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
 /* ACHIEVEMENT */
 .ach-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;scrollbar-width:none}
 .ach-row::-webkit-scrollbar{display:none}
@@ -482,13 +486,14 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:8px">
       <button class="tb-btn" id="backBtn" onclick="goBack()" style="display:none;padding:6px 10px;font-size:16px;border-radius:8px">←</button>
-      <div class="topbar-brand" onclick="goToDashboard()">💰 <span id="topbarName">raf</span> <span style="font-size:9px;font-weight:600;color:var(--text3);background:var(--bg3);border:1px solid var(--border2);border-radius:99px;padding:2px 7px;letter-spacing:.03em">v14</span></div>
+      <div class="topbar-brand" onclick="goToDashboard()">💰 <span id="topbarName">raf</span> <span style="font-size:9px;font-weight:600;color:var(--text3);background:var(--bg3);border:1px solid var(--border2);border-radius:99px;padding:2px 7px;letter-spacing:.03em">v15</span></div>
     </div>
     <div class="topbar-right">
-      <button class="tb-btn" onclick="goToDashboard()" style="background:var(--info-bg);border-color:var(--info-border);color:var(--blue);font-weight:700">🏠 홈</button>
-      <button class="tb-btn" onclick="quickAssets()" style="background:var(--good-bg);border-color:var(--good-border);color:var(--teal);font-weight:700">📊 내 자산</button>
-      <button class="tb-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
-      <button class="tb-btn" onclick="logout()" style="color:var(--red);border-color:var(--bad-border)" title="초기화 (전체 데이터 삭제)">↩ 초기화</button>
+      <button class="tb-btn" onclick="goToDashboard()" id="navHome" style="font-weight:700">🏦 자산현황</button>
+      <button class="tb-btn" onclick="switchMain('asset')" id="navAsset" style="font-weight:700">📊 내 자산</button>
+      <button class="tb-btn" onclick="switchMain('realestate')" id="navReal" style="font-weight:700">🏠 부동산</button>
+      <button class="tb-btn" onclick="toggleTheme()" id="themeBtn">☀️ 라이트</button>
+      <button class="tb-btn" onclick="logout()" style="color:var(--red);border-color:var(--bad-border);font-weight:700">🚪 로그아웃</button>
     </div>
   </div>
 
@@ -528,7 +533,8 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
           <div class="dash-hero-label">총 자산</div>
           <div class="dash-hero-val" id="dashTotal">-</div>
           <div class="dash-hero-pnl" id="dashPnl"></div>
-          <div style="margin-top:14px">
+          <div id="dashMotivation" style="margin-top:8px;font-size:12px;font-weight:600;color:rgba(255,255,255,.7);line-height:1.5"></div>
+          <div style="margin-top:10px">
             <div style="font-size:10px;color:rgba(255,255,255,.5);margin-bottom:4px">목표 달성률</div>
             <div style="background:rgba(255,255,255,.1);border-radius:99px;height:8px;overflow:hidden">
               <div id="dashGoalPb" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#5b8aff,#2dd4a0);transition:width .6s;width:0%"></div>
@@ -615,17 +621,6 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
           <div class="mc"><div class="ml">총 수익률</div><div class="mv" id="pfPct">-</div></div>
         </div>
 
-        <!-- 예수금 (계좌별) -->
-        <div class="card" style="padding:12px 14px;margin-bottom:12px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div style="font-size:11px;font-weight:700;color:var(--text2)">💵 예수금 <span style="font-size:9px;font-weight:400;color:var(--text3)">(증권·거래소 계좌 현금 — 총 자산에 포함)</span></div>
-            <button onclick="pfAddCashRow()" style="font-size:10px;font-weight:700;color:var(--blue);background:var(--info-bg);border:1px solid var(--info-border);border-radius:99px;padding:3px 10px;cursor:pointer;font-family:inherit">+ 계좌 추가</button>
-          </div>
-          <div id="pfCashList" style="display:flex;flex-direction:column;gap:6px"></div>
-          <div style="margin-top:6px;display:flex;justify-content:flex-end;gap:16px;font-size:11px;color:var(--text2)">
-            <span>합계: <strong id="pfCashTotal" style="color:var(--blue)">0원</strong></span>
-          </div>
-        </div>
         <!-- 자산 목록 -->
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -644,6 +639,7 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
           <div class="card-title">➕ 자산 추가 <span style="font-size:11px;color:var(--text2);font-weight:400;text-transform:none;letter-spacing:0">탭 선택 후 검색하세요</span></div>
           <div class="mini-tabs" id="pfAddTabs">
             <button class="mini-tab active" onclick="pfSwitchAdd('dep',this)">🏦 예금·적금</button>
+            <button class="mini-tab" onclick="pfSwitchAdd('cash',this)">💵 예수금</button>
             <button class="mini-tab" onclick="pfSwitchAdd('us',this)">🇺🇸 미국주식</button>
             <button class="mini-tab" onclick="pfSwitchAdd('kr',this)">🇰🇷 한국주식</button>
             <button class="mini-tab" onclick="pfSwitchAdd('coin',this)">🪙 코인</button>
@@ -663,6 +659,16 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
               <div><label class="af-label">메모</label><input type="text" class="af-input" id="pa_dep_memo" placeholder="선택"></div>
             </div>
             <button class="btn primary" onclick="pfAddAssetDep()" style="margin-top:4px">+ 예금·적금 추가하기</button>
+          </div>
+          <!-- 예수금 -->
+          <div id="pfAdd-cash" class="add-form" style="display:none">
+            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">💵 예수금 — 증권·거래소 계좌 현금 (총 자산 반영)</div>
+            <div style="background:var(--info-bg);border:1px solid var(--info-border);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:var(--info-text);line-height:1.75">
+              계좌별로 따로 입력하세요. 원화·달러·USDT 등 통화를 선택하면 원화로 자동 환산돼요.
+            </div>
+            <div id="pfCashList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
+            <button onclick="pfAddCashRow()" class="btn primary" style="margin-bottom:4px">+ 예수금 계좌 추가</button>
+            <div style="text-align:right;font-size:12px;font-weight:700;color:var(--text2);margin-top:6px">합계: <span id="pfCashTotal" style="color:var(--blue)">0원</span></div>
           </div>
           <!-- 미국주식 -->
           <div id="pfAdd-us" class="add-form" style="display:none">
@@ -933,7 +939,7 @@ function save(){
 load();
 
 /* ===================== UTILS ===================== */
-let isDark=true;
+let isDark=false;
 function fmtW(v){v=Math.round(v);if(v===0)return'0원';const neg=v<0;v=Math.abs(v);const e=Math.floor(v/100000000),m=Math.floor((v%100000000)/10000);let s=e>0&&m>0?e+'억 '+m.toLocaleString()+'만':e>0?e+'억':m>0?m.toLocaleString()+'만':v.toLocaleString();return(neg?'-':'')+s+' 원';}
 function fmtU(v){return'$'+Math.abs(v).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
 function fmtP(v,d=2){return(v>=0?'+':'')+v.toFixed(d)+'%';}
@@ -950,7 +956,7 @@ function syncTS(tid,sid,manUnit){const raw=+document.getElementById(tid).value;c
 function toggleTheme(){
   isDark=!isDark;
   document.documentElement.setAttribute('data-theme',isDark?'dark':'light');
-  document.getElementById('themeBtn').textContent=isDark?'🌙':'☀️';
+  document.getElementById('themeBtn').textContent=isDark?'🌙 다크':'☀️ 라이트';
 }
 
 /* ===================== ONBOARDING ===================== */
@@ -979,19 +985,23 @@ function goStep(n){
 }
 function showObResult(){
   const total=(S.saving+S.stock);
-  const months=calcMonthsToGoal(total,S.monthly,S.goal);
   const needRate=calcNeedMonthly(total,S.monthly,S.goal);
-  const now=new Date();
-  const achDate=new Date(now);
-  achDate.setMonth(achDate.getMonth()+(months||120));
   const el=document.getElementById('ob-results');
   const pct=S.goal>0?Math.min(100,Math.round(total/S.goal*100)):0;
+  // 목표 달성일까지 남은 개월 수
+  let targetMonths=0;
+  if(S.targetDate){
+    const now=new Date(),target=new Date(S.targetDate+'-01');
+    targetMonths=Math.max(1,(target.getFullYear()-now.getFullYear())*12+(target.getMonth()-now.getMonth()));
+  }
+  const targetDateStr=S.targetDate?fmtDate(S.targetDate):'-';
   let insightCls='info',insightMsg='';
-  if(needRate===null){insightCls='bad';insightMsg='목표가 너무 높거나 기간이 짧아요. 목표를 조정해보세요.';}
-  else if(needRate<=0.5){insightCls='good';insightMsg='매달 0.5% 이하의 수익률로도 달성 가능해요! 예금만으로도 가능한 안정적인 목표예요.';}
-  else if(needRate<=3){insightCls='good';insightMsg=`월 ${needRate.toFixed(2)}%의 수익률이 필요해요. ETF 투자로 장기 달성 가능한 현실적인 목표예요.`;}
-  else if(needRate<=7){insightCls='warn';insightMsg=`월 ${needRate.toFixed(2)}%의 수익률이 필요해요. 적극적인 투자가 필요하지만 도전해볼 만해요.`;}
-  else{insightCls='bad';insightMsg=`월 ${needRate.toFixed(2)}%는 매우 높은 수익률이에요. 목표나 기간을 재조정하는 걸 권장해요.`;}
+  if(!S.targetDate){insightCls='info';insightMsg='목표 달성일을 설정하면 필요 수익률을 알 수 있어요.';}
+  else if(needRate===null){insightCls='bad';insightMsg=`${targetDateStr}까지 달성하려면 현재 조건이 부족해요. 월 납입액을 늘리거나 목표를 조정해보세요.`;}
+  else if(needRate<=0.5){insightCls='good';insightMsg=`${targetDateStr}까지 월 <strong>${needRate.toFixed(2)}%</strong>면 충분해요! 예금 이자만으로도 달성 가능한 목표예요.`;}
+  else if(needRate<=3){insightCls='good';insightMsg=`${targetDateStr}까지 월 <strong>${needRate.toFixed(2)}%</strong> (연 ${((Math.pow(1+needRate/100,12)-1)*100).toFixed(1)}%)가 필요해요. ETF 장기투자로 충분히 달성 가능해요.`;}
+  else if(needRate<=7){insightCls='warn';insightMsg=`${targetDateStr}까지 월 <strong>${needRate.toFixed(2)}%</strong>의 수익률이 필요해요. 적극적인 투자 전략이 필요하지만 도전해볼 만해요.`;}
+  else{insightCls='bad';insightMsg=`${targetDateStr}까지 월 <strong>${needRate.toFixed(2)}%</strong>는 매우 높은 수익률이에요. 목표 금액을 낮추거나 달성일을 늦추는 걸 권장해요.`;}
   el.innerHTML=`
     <div class="ob-result">
       <div class="ob-result-label">현재 자산</div>
@@ -999,9 +1009,9 @@ function showObResult(){
       <div class="ob-result-sub">예·적금 ${fmtW(S.saving)} + 투자자산 ${fmtW(S.stock)}</div>
     </div>
     <div class="ob-result">
-      <div class="ob-result-label">목표 달성까지</div>
-      <div class="ob-result-val" style="color:var(--teal)">${months?fmtM(months):'계산 필요'}</div>
-      <div class="ob-result-sub">예상 달성일: ${months?achDate.getFullYear()+'년 '+(achDate.getMonth()+1)+'월':'-'}</div>
+      <div class="ob-result-label">목표 달성을 위한 필요 월 수익률</div>
+      <div class="ob-result-val" style="color:var(--blue)">${needRate!==null?fmtP(needRate)+'/월':'-'}</div>
+      <div class="ob-result-sub">목표일: ${targetDateStr} · 목표금액: ${fmtW(S.goal)}</div>
     </div>
     <div class="ob-result">
       <div class="ob-result-label">목표 달성률</div>
@@ -1009,7 +1019,7 @@ function showObResult(){
       <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2)"><span>${fmtW(total)}</span><span>${pct}% → ${fmtW(S.goal)}</span></div>
     </div>
     <div class="insight ${insightCls}" style="margin-bottom:12px">
-      <div class="insight-title">${insightCls==='good'?'✅ 달성 가능!':insightCls==='warn'?'⚠️ 도전적인 목표':insightCls==='bad'?'❌ 목표 재조정 필요':'💡 분석 완료'}</div>
+      <div class="insight-title">${insightCls==='good'?'✅ 달성 가능!':insightCls==='warn'?'⚠️ 도전적인 목표':insightCls==='bad'?'❌ 전략 점검 필요':'💡 분석 완료'}</div>
       <div class="insight-body">${insightMsg}</div>
     </div>
   `;
@@ -1053,11 +1063,13 @@ function goToDashboard(){
   document.getElementById('sec-dashboard').classList.add('active');
   document.getElementById('backBtn').style.display='none';
   curMain='dashboard';navHistory=[{type:'dashboard'}];
+  // 탑바 활성 표시
+  ['navHome','navAsset','navReal'].forEach(id=>{const b=document.getElementById(id);if(b){b.style.background='';b.style.color='';b.style.borderColor='';}});
+  const nh=document.getElementById('navHome');if(nh){nh.style.background='var(--info-bg)';nh.style.color='var(--blue)';nh.style.borderColor='var(--info-border)';}
   updateDashboard();
 }
 function switchMain(tab,btn){
   curMain=tab;
-  // 대시보드 섹션 명시적 비활성화 (중복 표시 버그 방지)
   const dashSec=document.getElementById('sec-dashboard');
   if(dashSec)dashSec.classList.remove('active');
   document.querySelectorAll('.main-tab').forEach(b=>b.classList.remove('active'));
@@ -1067,6 +1079,10 @@ function switchMain(tab,btn){
   document.getElementById('assetSubTabs').style.display=tab==='asset'?'flex':'none';
   document.getElementById('realSubTabs').style.display=tab==='realestate'?'flex':'none';
   document.getElementById('backBtn').style.display='flex';
+  // 탑바 활성 표시
+  ['navHome','navAsset','navReal'].forEach(id=>{const b=document.getElementById(id);if(b){b.style.background='';b.style.color='';b.style.borderColor='';}});
+  const ab=document.getElementById(tab==='asset'?'navAsset':'navReal');
+  if(ab){ab.style.background='var(--info-bg)';ab.style.color='var(--blue)';ab.style.borderColor='var(--info-border)';}
   if(tab==='asset'){switchSub('portfolio');}
   else{switchSub('mortgage');}
 }
@@ -1479,32 +1495,57 @@ function pfGetData(a){
 function pfRenderCashList(){
   const list=document.getElementById('pfCashList');if(!list)return;
   const accounts=S.pfCashAccounts||[];
-  if(!accounts.length){
-    list.innerHTML=`<div style="text-align:center;padding:8px;font-size:11px;color:var(--text3)">+ 계좌 추가 버튼으로 예수금을 입력하세요</div>`;
-    document.getElementById('pfCashTotal').textContent='0원';
-    return;
-  }
-  list.innerHTML=accounts.map((ac,i)=>`
-    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-      <input type="text" value="${ac.name}" placeholder="계좌명 (예: 키움 원화)" 
-        style="flex:1;min-width:90px;padding:6px 9px;border:1.5px solid var(--border2);border-radius:8px;background:var(--bg3);color:var(--text);font-size:12px;font-family:inherit;outline:none"
-        oninput="pfUpdateCash(${i},'name',this.value)">
-      <input type="number" value="${ac.amount}" placeholder="금액" min="0"
-        style="width:110px;padding:6px 9px;border:1.5px solid var(--border2);border-radius:8px;background:var(--bg3);color:var(--text);font-size:12px;font-family:inherit;outline:none;-moz-appearance:textfield"
-        oninput="pfUpdateCash(${i},'amount',this.value)">
-      <select onchange="pfUpdateCash(${i},'currency',this.value)"
-        style="padding:6px 8px;border:1.5px solid var(--border2);border-radius:8px;background:var(--bg3);color:var(--text);font-size:11px;font-family:inherit;outline:none">
-        <option value="KRW" ${ac.currency==='KRW'?'selected':''}>원화 ₩</option>
-        <option value="USD" ${ac.currency==='USD'?'selected':''}>달러 $</option>
-        <option value="USDT" ${ac.currency==='USDT'?'selected':''}>USDT</option>
-        <option value="BTC" ${ac.currency==='BTC'?'selected':''}>BTC</option>
+  // 행 수 맞추기 (추가/삭제 시에만 DOM 재구성)
+  const existing=list.querySelectorAll('.cash-row');
+  // 행이 부족하면 추가, 초과하면 제거
+  while(list.querySelectorAll('.cash-row').length<accounts.length){
+    const i=list.querySelectorAll('.cash-row').length;
+    const row=document.createElement('div');
+    row.className='cash-row';
+    row.style.cssText='display:flex;align-items:center;gap:6px;flex-wrap:wrap';
+    row.innerHTML=`
+      <input type="text" class="cr-name" placeholder="계좌명 (예: 키움 원화)"
+        style="flex:1;min-width:90px;padding:7px 9px;border:1.5px solid var(--border2);border-radius:8px;background:var(--bg3);color:var(--text);font-size:12px;font-family:inherit;outline:none"
+        oninput="pfSaveCash(${i},'name',this.value)">
+      <input type="number" class="cr-amount" placeholder="금액" min="0"
+        style="width:110px;padding:7px 9px;border:1.5px solid var(--border2);border-radius:8px;background:var(--bg3);color:var(--text);font-size:12px;font-family:inherit;outline:none;-moz-appearance:textfield"
+        oninput="pfSaveCash(${i},'amount',this.value)">
+      <select class="cr-currency" onchange="pfSaveCash(${i},'currency',this.value)"
+        style="padding:7px 8px;border:1.5px solid var(--border2);border-radius:8px;background:var(--bg3);color:var(--text);font-size:11px;font-family:inherit;outline:none">
+        <option value="KRW">원화 ₩</option>
+        <option value="USD">달러 $</option>
+        <option value="USDT">USDT</option>
+        <option value="BTC">BTC</option>
       </select>
-      <span style="font-size:10px;color:var(--text3);min-width:70px;text-align:right">${pfCashToKRW(ac)}</span>
-      <button onclick="pfDelCash(${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:2px 4px" title="삭제">✕</button>
-    </div>
-  `).join('');
+      <span class="cr-krw" style="font-size:10px;color:var(--text3);min-width:64px;text-align:right"></span>
+      <button onclick="pfDelCash(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:2px 4px" title="삭제">✕</button>`;
+    list.appendChild(row);
+  }
+  while(list.querySelectorAll('.cash-row').length>accounts.length){
+    list.removeChild(list.querySelector('.cash-row:last-child'));
+  }
+  // 값 동기화 (포커스 빼앗지 않음)
+  list.querySelectorAll('.cash-row').forEach((row,i)=>{
+    const ac=accounts[i];if(!ac)return;
+    const nameEl=row.querySelector('.cr-name');
+    const amtEl=row.querySelector('.cr-amount');
+    const curEl=row.querySelector('.cr-currency');
+    const krwEl=row.querySelector('.cr-krw');
+    if(document.activeElement!==nameEl)nameEl.value=ac.name||'';
+    if(document.activeElement!==amtEl)amtEl.value=ac.amount||'';
+    curEl.value=ac.currency||'KRW';
+    // 이벤트 핸들러 index 갱신
+    nameEl.oninput=e=>pfSaveCash(i,'name',e.target.value);
+    amtEl.oninput=e=>pfSaveCash(i,'amount',e.target.value);
+    curEl.onchange=e=>pfSaveCash(i,'currency',e.target.value);
+    row.querySelector('button').onclick=()=>pfDelCash(i);
+    krwEl.textContent=pfCashToKRWNum(ac)>0?fmtW(Math.round(pfCashToKRWNum(ac))):'';
+  });
+  if(!accounts.length){
+    list.innerHTML='<div style="text-align:center;padding:8px;font-size:11px;color:var(--text3)">+ 예수금 계좌 추가 버튼을 눌러 입력하세요</div>';
+  }
   const total=accounts.reduce((s,ac)=>s+pfCashToKRWNum(ac),0);
-  document.getElementById('pfCashTotal').textContent=fmtW(total);
+  const tot=document.getElementById('pfCashTotal');if(tot)tot.textContent=total>0?fmtW(total):'0원';
 }
 function pfCashToKRWNum(ac){
   const amt=parseFloat(ac.amount)||0;
@@ -1523,12 +1564,19 @@ function pfAddCashRow(){
   S.pfCashAccounts.push({name:'',amount:'',currency:'KRW'});
   save();pfRenderCashList();pfCalcSummary();
 }
-function pfUpdateCash(i,field,val){
+function pfSaveCash(i,field,val){
   if(!S.pfCashAccounts)S.pfCashAccounts=[];
   if(!S.pfCashAccounts[i])return;
   S.pfCashAccounts[i][field]=val;
-  save();pfRenderCashList();pfCalcSummary();updateDashboard();
+  save();
+  // 합계와 환산액만 조용히 업데이트 (DOM 재구성 없음)
+  const total=(S.pfCashAccounts||[]).reduce((s,ac)=>s+pfCashToKRWNum(ac),0);
+  const tot=document.getElementById('pfCashTotal');if(tot)tot.textContent=total>0?fmtW(total):'0원';
+  const rows=document.querySelectorAll('#pfCashList .cash-row');
+  if(rows[i]){const krwEl=rows[i].querySelector('.cr-krw');if(krwEl)krwEl.textContent=pfCashToKRWNum(S.pfCashAccounts[i])>0?fmtW(Math.round(pfCashToKRWNum(S.pfCashAccounts[i]))):''}
+  pfCalcSummary();if(curMain==='dashboard')updateDashboard();
 }
+function pfUpdateCash(i,field,val){pfSaveCash(i,field,val);}// 하위호환
 function pfDelCash(i){
   if(!S.pfCashAccounts)return;
   S.pfCashAccounts.splice(i,1);
@@ -1567,10 +1615,11 @@ function pfSwitchAdd(type,btn){
   pfAddT=type;
   document.getElementById('pfAddTabs').querySelectorAll('.mini-tab').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  ['coin','us','kr','dep'].forEach(t=>{
+  ['coin','us','kr','dep','cash'].forEach(t=>{
     const el=document.getElementById('pfAdd-'+t);
     if(el) el.style.display=t===type?'block':'none';
   });
+  if(type==='cash')pfRenderCashList();
 }
 function pfToggle(id){const det=document.getElementById('pfd_'+id);const chv=document.getElementById('pfc_'+id);if(!det)return;const op=det.classList.contains('show');det.classList.toggle('show',!op);if(chv)chv.classList.toggle('open',!op);document.getElementById('pfa_'+id)?.classList.toggle('expanded',!op);}
 function pfUpdateKR(id){const a=S.pfAssets.find(x=>x.id===id);if(!a)return;const v=parseFloat(document.getElementById('pfku_'+id)?.value);if(isNaN(v)||v<=0){alert('현재가를 입력해주세요.');return;}a.currentPrice=v;pfSave();pfRenderAssets();pfCalcSummary();updateDashboard();}
@@ -1599,63 +1648,64 @@ function pfUpdateAsset(id){
   notify('✅ '+a.name+' 수정 저장됨!');
 }
 
-/* ===================== 참고용 지지·저항 분석 ===================== */
+/* ===================== 참고용 매매 분석 ===================== */
 function pfAnalysisComment(a, d, tp, sl){
   if(a.type==='dep') return '';
   const avg=a.avgPrice;
   if(!avg||avg<=0) return '';
+  const p=pfPrices[a.ticker];
   let lines=[];
-  const ref='<span style="color:var(--amber);font-weight:700">⚠️ [참고용]</span> ';
+  const ref='<span style="background:rgba(245,166,35,.18);color:var(--amber);font-weight:700;font-size:9px;padding:1px 5px;border-radius:4px;margin-right:4px">참고용</span>';
 
-  // 평단 대비 현재가 위치 분석
+  // ① 평단 대비 현재 위치
   if(d.hasPrc && d.avgKRW>0){
-    const distPct=((d.curKRW-d.avgKRW)/d.avgKRW*100);
-    let posMsg='';
-    if(distPct>=tp*0.9)      posMsg=`현재가가 익절 목표(+${tp}%)에 <strong>거의 도달</strong>했어요`;
-    else if(distPct>=tp*0.5) posMsg=`평단 대비 <strong>+${distPct.toFixed(1)}%</strong> 상승 중 — 익절까지 ${(tp-distPct).toFixed(1)}% 남음`;
-    else if(distPct>0)       posMsg=`평단 대비 <strong>+${distPct.toFixed(1)}%</strong> 소폭 상승`;
-    else if(distPct>=-sl*0.5)posMsg=`평단 대비 <strong>${distPct.toFixed(1)}%</strong> 소폭 하락 — 손절선까지 ${(sl+distPct).toFixed(1)}% 여유`;
-    else if(distPct>-sl)     posMsg=`평단 대비 <strong>${distPct.toFixed(1)}%</strong> — 손절 기준(-${sl}%)에 <strong>근접</strong>`;
-    else                     posMsg=`평단 대비 <strong>${distPct.toFixed(1)}%</strong> — 손절선 하회, 전략 점검 필요`;
-    if(posMsg) lines.push(ref+'평단 분석: '+posMsg);
+    const dist=((d.curKRW-d.avgKRW)/d.avgKRW*100);
+    let icon,msg;
+    if(dist>=tp)          {icon='🎯';msg=`익절 목표(+${tp}%) 달성! 수익 실현을 고려해보세요`;}
+    else if(dist>=tp*0.7) {icon='📈';msg=`1차 익절선(+${(tp*0.7).toFixed(1)}%) 부근 — 일부 물량 익절 고려`;}
+    else if(dist>=tp*0.4) {icon='🟢';msg=`수익 구간 진입 (+${dist.toFixed(1)}%) — 추가 상승 기대 시 보유 유지`;}
+    else if(dist>0)       {icon='🔼';msg=`소폭 수익 중 (+${dist.toFixed(1)}%) — 손절선 위에 있어요`;}
+    else if(dist>-sl*0.5) {icon='🟡';msg=`소폭 하락 (${dist.toFixed(1)}%) — 1차 손절선(-${(sl*0.5).toFixed(1)}%)까지 ${(sl*0.5+dist).toFixed(1)}% 여유`;}
+    else if(dist>-sl)     {icon='🔴';msg=`주의! 1차 손절선(-${(sl*0.5).toFixed(1)}%) 하회 — 손절 여부 점검 필요`;}
+    else                  {icon='🚨';msg=`손절 기준(-${sl}%) 하회 — 추가 하락 시 손절 실행 고려`;}
+    lines.push(`<div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:6px">
+      <span style="font-size:14px;line-height:1.4">${icon}</span>
+      <div><div style="font-size:10px;font-weight:700;color:var(--text2);margin-bottom:1px">${ref}현재 위치 분석</div>
+      <div style="font-size:11px;color:var(--text)">${msg}</div></div></div>`);
   }
 
-  // 고가/저가 기반 지지·저항 (코인: 업비트 24H, 미국주식: Yahoo 당일)
-  const p=pfPrices[a.ticker];
+  // ② 고가/저가 기반 익절·손절 제안
   if(p && p.high && p.low && p.high>p.low){
-    const high=p.high, low=p.low;
-    const cur=a.type==='us'?p.price:d.curKRW;
-    const src=a.type==='coin'?'업비트 24H':'Yahoo Finance 당일';
+    const high=p.high, low=p.low, cur=a.type==='us'?p.price:d.curKRW;
+    const src=a.type==='coin'?'업비트 24H':'Yahoo 당일';
+    const fmt=v=>a.type==='us'?`$${v.toFixed(2)}`:`${Math.round(v).toLocaleString()}원`;
+    // 피봇 계산
+    const pivot=(high+low+cur)/3;
+    const r1=2*pivot-low, r2=high+pivot-low;
+    const s1=2*pivot-high, s2=low-(high-pivot);
+    const posInRange=((cur-low)/(high-low)*100);
 
-    if(cur>0){
-      const rangeW=high-low;
-      const posInRange=((cur-low)/rangeW*100);
-      const toHigh=((high-cur)/cur*100).toFixed(1);
-      const toLow=((cur-low)/cur*100).toFixed(1);
-      let rangeMsg='';
-      if(posInRange>=80)      rangeMsg=`${src} 고점 근처 (고점까지 ${toHigh}%) — 단기 저항 주의`;
-      else if(posInRange<=20) rangeMsg=`${src} 저점 근처 (저점까지 ${toLow}%) — 지지 여부 확인 필요`;
-      else                    rangeMsg=`${src} 레인지 중간 (고점 -${toHigh}% / 저점 +${toLow}%)`;
+    let tp1Msg='', sl1Msg='';
+    if(posInRange>=70){tp1Msg=`고점 근처 — 단기 1차 익절: <strong>${fmt(r1)}</strong> 돌파 시 추가 보유, 실패 시 익절 고려`;}
+    else{tp1Msg=`1차 익절 목표: <strong>${fmt(r1)}</strong> (${src} 기준 R1 저항)`;}
+    if(posInRange<=30){sl1Msg=`저점 근처 — 1차 손절: <strong>${fmt(s1)}</strong> 이탈 시 손절 고려`;}
+    else{sl1Msg=`1차 손절 기준: <strong>${fmt(s1)}</strong> (${src} 기준 S1 지지)`;}
 
-      const highFmt=a.type==='us'?`$${high.toFixed(2)}`:`${high.toLocaleString()}원`;
-      const lowFmt=a.type==='us'?`$${low.toFixed(2)}`:`${low.toLocaleString()}원`;
-      lines.push(ref+`고가 <strong>${highFmt}</strong> / 저가 <strong>${lowFmt}</strong> — ${rangeMsg}`);
-
-      // 피봇 포인트 R1 / S1
-      const pivot=(high+low+cur)/3;
-      const r1=2*pivot-low, s1=2*pivot-high;
-      const r1fmt=a.type==='us'?`$${r1.toFixed(2)}`:`${Math.round(r1).toLocaleString()}원`;
-      const s1fmt=a.type==='us'?`$${s1.toFixed(2)}`:`${Math.round(s1).toLocaleString()}원`;
-      lines.push(ref+`피봇 기준 — 저항(R1): <strong>${r1fmt}</strong> / 지지(S1): <strong>${s1fmt}</strong>`);
-    }
+    lines.push(`<div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:6px">
+      <span style="font-size:14px;line-height:1.4">📊</span>
+      <div><div style="font-size:10px;font-weight:700;color:var(--text2);margin-bottom:3px">${ref}${src} 기준 제안</div>
+      <div style="font-size:11px;color:var(--text);margin-bottom:3px">🎯 ${tp1Msg}</div>
+      <div style="font-size:11px;color:var(--text);margin-bottom:3px">🛑 ${sl1Msg}</div>
+      <div style="font-size:10px;color:var(--text3)">고가 ${fmt(high)} / 저가 ${fmt(low)} / 2차익절 ${fmt(r2)} / 2차손절 ${fmt(s2)}</div>
+      </div></div>`);
   } else if(a.type==='us' && !p){
-    lines.push(ref+'<span style="color:var(--text3)">시세 미수신 — 🔄 새로고침 후 분석 표시</span>');
+    lines.push(`<div style="font-size:11px;color:var(--text3);padding:6px 0">${ref}시세 미수신 — 🔄 새로고침 후 분석 가능</div>`);
   }
 
   if(!lines.length) return '';
-  return `<div style="background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.25);border-radius:9px;padding:10px 12px;margin-top:8px">
-    <div style="font-size:10px;font-weight:700;color:var(--amber);margin-bottom:5px;letter-spacing:.03em">📊 지지·저항 참고 분석 <span style="font-size:9px;font-weight:400;color:var(--text3)">(투자 판단의 참고용이며, 정확도를 보장하지 않습니다)</span></div>
-    ${lines.map(l=>`<div style="font-size:11px;color:var(--text2);line-height:1.8;margin-bottom:2px">${l}</div>`).join('')}
+  return `<div style="background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.22);border-radius:9px;padding:10px 12px;margin-top:8px">
+    <div style="font-size:10px;font-weight:700;color:var(--amber);margin-bottom:8px;letter-spacing:.02em">📋 매매 참고 분석 <span style="font-size:9px;font-weight:400;color:var(--text3)">(API 없이 현재 시세·평단 기반 자동 분석 / 투자 판단은 본인이 하세요)</span></div>
+    ${lines.join('')}
   </div>`;
 }
 
@@ -2011,6 +2061,21 @@ function updateDashboard(){
   document.getElementById('dashGoalPbLeft').textContent=`현재 ${gPct}%`;
   document.getElementById('dashGoalPbRight').textContent='목표 '+fmtW(goal);
 
+  // 응원 메시지
+  const motivEl=document.getElementById('dashMotivation');
+  if(motivEl){
+    const msgs=[
+      [100,'🎉 목표를 달성했어요! 다음 목표를 세워볼까요?'],
+      [80, `🔥 거의 다 왔어요! 목표까지 ${fmtW(remaining)} 남았어요`],
+      [50, `💪 절반을 넘었어요! ${S.name||'투자자'}님, 이 페이스면 충분해요`],
+      [30, `📈 착실하게 쌓이고 있어요. 꾸준함이 최고의 전략이에요`],
+      [10, `🌱 시작이 반이에요! 오늘도 한 걸음씩 나아가고 있어요`],
+      [0,  `💰 첫 걸음을 내디뎌보세요. 작은 시작이 큰 결과를 만들어요`],
+    ];
+    const msg=msgs.find(([t])=>gPct>=t);
+    motivEl.textContent=msg?msg[1]:'';
+  }
+
   // 남은 금액
   const remaining=Math.max(0,goal-curT);
   document.getElementById('dashRemain').textContent=remaining>0?fmtW(remaining):'달성!';
@@ -2065,28 +2130,57 @@ function updateDashboard(){
 
 /* ===================== 성취 배지 ===================== */
 const ACHIEVEMENTS=[
-  {id:'first_asset',emoji:'🌱',label:'첫 자산',check:()=>S.pfAssets.length>=1},
-  {id:'three_assets',emoji:'💼',label:'3종 보유',check:()=>S.pfAssets.length>=3},
-  {id:'ten_assets',emoji:'📦',label:'10종 보유',check:()=>S.pfAssets.length>=10},
-  {id:'first_log',emoji:'📅',label:'첫 기록',check:()=>S.pfLogs.length>=1},
-  {id:'three_months',emoji:'📈',label:'3개월 기록',check:()=>S.pfLogs.length>=3},
-  {id:'half_goal',emoji:'🎯',label:'목표 50%',check:()=>{const t=getPfTotal();return S.goal>0&&t/S.goal>=0.5;}},
-  {id:'goal_done',emoji:'🏆',label:'목표 달성',check:()=>{const t=getPfTotal();return S.goal>0&&t>=S.goal;}},
-  {id:'positive_month',emoji:'✅',label:'플러스 달',check:()=>S.pfLogs.some(l=>l.rate>0)},
-  {id:'big_month',emoji:'🔥',label:'월 5%+',check:()=>S.pfLogs.some(l=>l.rate>=5)},
+  {id:'first_asset',emoji:'🌱',label:'첫 자산',desc:'첫 자산을 추가했어요!',check:()=>S.pfAssets.length>=1},
+  {id:'three_assets',emoji:'💼',label:'3종 보유',desc:'자산 3종 보유 달성',check:()=>S.pfAssets.length>=3},
+  {id:'five_assets',emoji:'🎒',label:'5종 보유',desc:'자산 5종 보유 달성',check:()=>S.pfAssets.length>=5},
+  {id:'ten_assets',emoji:'📦',label:'10종 보유',desc:'자산 10종 보유 달성',check:()=>S.pfAssets.length>=10},
+  {id:'first_log',emoji:'📅',label:'첫 기록',desc:'월별 수익률 첫 기록',check:()=>S.pfLogs.length>=1},
+  {id:'three_months',emoji:'📈',label:'3개월 기록',desc:'3개월 꾸준히 기록',check:()=>S.pfLogs.length>=3},
+  {id:'six_months',emoji:'🗓️',label:'6개월 기록',desc:'6개월 꾸준히 기록',check:()=>S.pfLogs.length>=6},
+  {id:'twelve_months',emoji:'🏅',label:'1년 기록',desc:'1년 내내 기록한 투자자!',check:()=>S.pfLogs.length>=12},
+  {id:'goal_10',emoji:'🔵',label:'목표 10%',desc:'목표 달성률 10% 돌파',check:()=>{const t=getPfTotal();return S.goal>0&&t/S.goal>=0.1;}},
+  {id:'half_goal',emoji:'🎯',label:'목표 50%',desc:'목표 달성률 50% 돌파',check:()=>{const t=getPfTotal();return S.goal>0&&t/S.goal>=0.5;}},
+  {id:'goal_80',emoji:'💪',label:'목표 80%',desc:'목표 달성률 80% 돌파!',check:()=>{const t=getPfTotal();return S.goal>0&&t/S.goal>=0.8;}},
+  {id:'goal_done',emoji:'🏆',label:'목표 달성!',desc:'목표 금액 완전 달성!',check:()=>{const t=getPfTotal();return S.goal>0&&t>=S.goal;}},
+  {id:'positive_month',emoji:'✅',label:'플러스 달',desc:'월 수익률 플러스 달성',check:()=>S.pfLogs.some(l=>l.rate>0)},
+  {id:'big_month',emoji:'🚀',label:'월 5%+',desc:'한 달 수익률 5% 이상',check:()=>S.pfLogs.some(l=>l.rate>=5)},
+  {id:'ten_percent',emoji:'💥',label:'월 10%+',desc:'한 달 수익률 10% 이상!',check:()=>S.pfLogs.some(l=>l.rate>=10)},
+  {id:'no_loss_3',emoji:'🛡️',label:'3달 무손실',desc:'최근 3개월 손실 없음',check:()=>S.pfLogs.length>=3&&S.pfLogs.slice(0,3).every(l=>l.rate>=0)},
+  {id:'asset_1000',emoji:'💰',label:'1000만 돌파',desc:'총 자산 1,000만원 돌파',check:()=>getPfTotal()>=10000000},
+  {id:'asset_5000',emoji:'💎',label:'5000만 돌파',desc:'총 자산 5,000만원 돌파',check:()=>getPfTotal()>=50000000},
+  {id:'asset_1억',emoji:'👑',label:'1억 클럽',desc:'총 자산 1억원 달성!',check:()=>getPfTotal()>=100000000},
+  {id:'diversified',emoji:'🌈',label:'분산투자',desc:'코인·주식·예금 모두 보유',check:()=>{const types=new Set(S.pfAssets.map(a=>a.type));return types.has('coin')&&(types.has('us')||types.has('kr'))&&types.has('dep');}},
+  {id:'early_bird',emoji:'🌅',label:'얼리버드',desc:'재테크 계산기를 시작했어요!',check:()=>true},
 ];
+
+/* 폭죽 효과 */
+function launchConfetti(){
+  const wrap=document.createElement('div');wrap.className='confetti-wrap';document.body.appendChild(wrap);
+  const colors=['#5b8aff','#2dd4a0','#f5a623','#ff5c6a','#a78bfa','#fbbf24','#34d399'];
+  for(let i=0;i<90;i++){
+    const p=document.createElement('div');p.className='confetti-piece';
+    p.style.cssText=`left:${Math.random()*100}%;background:${colors[i%colors.length]};width:${5+Math.random()*9}px;height:${5+Math.random()*9}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${1.4+Math.random()*2.2}s;animation-delay:${Math.random()*.9}s`;
+    wrap.appendChild(p);
+  }
+  setTimeout(()=>wrap.remove(),3800);
+}
+
 function checkAchievements(){
-  let newOne=false;
+  let newOnes=[];
   ACHIEVEMENTS.forEach(ach=>{
-    if(!S.achievements.includes(ach.id)&&ach.check()){S.achievements.push(ach.id);newOne=true;notify('🏅 새 배지 획득: '+ach.label);save();}
+    if(!S.achievements.includes(ach.id)&&ach.check()){S.achievements.push(ach.id);newOnes.push(ach);save();}
   });
-  if(newOne)updateAchievements();
+  if(newOnes.length){
+    launchConfetti();
+    newOnes.forEach((ach,i)=>setTimeout(()=>notify('🏅 배지 획득: '+ach.label+' — '+ach.desc),i*700));
+    updateAchievements();
+  }
 }
 function updateAchievements(){
   const row=document.getElementById('achRow');if(!row)return;
   row.innerHTML=ACHIEVEMENTS.map(a=>{
     const unlocked=S.achievements.includes(a.id)||a.check();
-    return`<div class="ach-item ${unlocked?'unlocked':''}" title="${a.label}"><div class="ach-emoji" style="${unlocked?'':'filter:grayscale(1);opacity:.35'}">${a.emoji}</div><div class="ach-label">${a.label}</div></div>`;
+    return`<div class="ach-item ${unlocked?'unlocked':''}" title="${a.desc}"><div class="ach-emoji" style="${unlocked?'':'filter:grayscale(1);opacity:.3'}">${a.emoji}</div><div class="ach-label">${a.label}</div></div>`;
   }).join('');
 }
 
@@ -2252,8 +2346,8 @@ function initApp(){
   renderBanks();calcMortgage();calcConv();calcConv2();calcSub();onCityChange();
 
   // 포트폴리오 초기화 — 기본 탭: 예금·적금
-  pfRenderAssets();pfCalcSummary();pfRenderCashList();
-  ['coin','us','kr','dep'].forEach(t=>{const el=document.getElementById('pfAdd-'+t);if(el)el.style.display=t==='dep'?'block':'none';});
+  pfRenderAssets();pfCalcSummary();
+  ['coin','us','kr','dep','cash'].forEach(t=>{const el=document.getElementById('pfAdd-'+t);if(el)el.style.display=t==='dep'?'block':'none'});
 
   // 차트
   setTimeout(()=>{calcInvest();calcSub();},300);
