@@ -729,8 +729,9 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
             </div>
             <button class="btn primary" onclick="pfAddAsset('coin')" style="margin-top:4px">+ 코인 추가하기</button>
           </div>
-        <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:4px">💾 모든 데이터 자동저장 · <button onclick="pfExport()" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:11px;font-weight:700;font-family:inherit">JSON 백업</button></div>
-      </div>
+          <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:4px">💾 모든 데이터 자동저장 · <button onclick="pfExport()" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:11px;font-weight:700;font-family:inherit">JSON 백업</button></div>
+        </div><!-- /자산 추가 card -->
+      </div><!-- /sec-portfolio -->
 
       <!-- ===== 목표·시뮬레이션 ===== -->
       <div id="sec-invest" class="section">
@@ -1585,6 +1586,19 @@ function pfUpdateDep(id){
 function pfDelAsset(id){if(!confirm('삭제할까요?'))return;S.pfAssets=S.pfAssets.filter(a=>a.id!==id);pfSave();pfRenderAssets();pfCalcSummary();updateDashboard();}
 function pfUpdateExit(id,field,val){const a=S.pfAssets.find(x=>x.id===id);if(!a)return;a[field]=parseFloat(val)||0;pfSave();pfRenderAssets();}
 
+/* 평균단가·수량·메모 수정 */
+function pfUpdateAsset(id){
+  const a=S.pfAssets.find(x=>x.id===id);if(!a)return;
+  const newAvg=parseFloat(document.getElementById('pfe_avg_'+id)?.value);
+  const newQty=parseFloat(document.getElementById('pfe_qty_'+id)?.value);
+  const newMemo=document.getElementById('pfe_memo_'+id)?.value.trim()||'';
+  if(isNaN(newAvg)||newAvg<=0){alert('올바른 평균단가를 입력해주세요.');return;}
+  if(isNaN(newQty)||newQty<=0){alert('올바른 수량을 입력해주세요.');return;}
+  a.avgPrice=newAvg;a.qty=newQty;a.memo=newMemo;
+  pfSave();pfRenderAssets();pfCalcSummary();updateDashboard();
+  notify('✅ '+a.name+' 수정 저장됨!');
+}
+
 /* ===================== 참고용 지지·저항 분석 ===================== */
 function pfAnalysisComment(a, d, tp, sl){
   if(a.type==='dep') return '';
@@ -1694,7 +1708,32 @@ function pfRenderAssets(){
       if(a.type==='coin'){const tpP=a.avgPrice*(1+tp/100),slP=a.avgPrice*(1-sl/100);if(d.curKRW>=tpP)exitAlert=`<div style="background:var(--good-bg);border:1px solid var(--good-border);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--good-text);font-weight:700;margin-bottom:8px">🎯 익절 목표가 도달! ${d.curKRW.toLocaleString()}원 ≥ ${tpP.toLocaleString()}원</div>`;else if(d.curKRW<=slP)exitAlert=`<div style="background:var(--bad-bg);border:1px solid var(--bad-border);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--bad-text);font-weight:700;margin-bottom:8px">🚨 손절 기준가! ${d.curKRW.toLocaleString()}원 ≤ ${slP.toLocaleString()}원</div>`;}
       if(a.type==='us'){const p=pfPrices[a.ticker];if(p){const tpU=a.avgPrice*(1+tp/100),slU=a.avgPrice*(1-sl/100);if(p.price>=tpU)exitAlert=`<div style="background:var(--good-bg);border:1px solid var(--good-border);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--good-text);font-weight:700;margin-bottom:8px">🎯 익절 목표가 도달! ${fmtU(p.price)} ≥ ${fmtU(tpU)}</div>`;else if(p.price<=slU)exitAlert=`<div style="background:var(--bad-bg);border:1px solid var(--bad-border);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--bad-text);font-weight:700;margin-bottom:8px">🚨 손절 기준가! ${fmtU(p.price)} ≤ ${fmtU(slU)}</div>`;}}
     }
-    const krUpdate=a.type==='kr'?`<div style="display:flex;gap:6px;margin-top:8px"><input type="number" id="pfku_${a.id}" value="${a.currentPrice||''}" placeholder="현재가" style="flex:1;padding:6px 8px;border:1.5px solid var(--border2);border-radius:8px;background:var(--bg2);color:var(--text);font-size:12px;font-family:inherit;outline:none;-moz-appearance:textfield"><button onclick="pfUpdateKR(${a.id})" style="padding:6px 12px;background:var(--bg3);border:1.5px solid var(--border2);border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;color:var(--text)">업데이트</button></div>`:'';
+    const krUpdate=a.type==='kr'?`<div style="display:flex;gap:6px;margin-top:8px"><input type="number" id="pfku_${a.id}" value="${a.currentPrice||''}" placeholder="현재가 (원)" style="flex:1;padding:6px 8px;border:1.5px solid var(--border2);border-radius:8px;background:var(--bg2);color:var(--text);font-size:12px;font-family:inherit;outline:none;-moz-appearance:textfield"><button onclick="pfUpdateKR(${a.id})" style="padding:6px 12px;background:var(--bg3);border:1.5px solid var(--border2);border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;color:var(--text)">현재가 저장</button></div>`:'';
+    const avgLabel=a.type==='us'?'평균단가 (USD)':'평균단가 (원)';
+    const avgVal=a.type==='us'?a.avgPrice.toFixed(4):a.avgPrice;
+    const avgPlaceholder=a.type==='us'?'예: 200.50':'예: 95000000';
+    const editPanel=`
+      <div style="margin-top:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--border2);border-radius:9px">
+        <div style="font-size:10px;font-weight:700;color:var(--text2);margin-bottom:8px;letter-spacing:.04em">✏️ 보유 정보 수정</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:3px">${avgLabel}</div>
+            <input type="number" id="pfe_avg_${a.id}" value="${avgVal}" placeholder="${avgPlaceholder}" step="any"
+              style="width:100%;padding:6px 8px;border:1.5px solid var(--border2);border-radius:7px;background:var(--bg2);color:var(--text);font-size:12px;font-family:inherit;outline:none;-moz-appearance:textfield">
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:3px">보유수량</div>
+            <input type="number" id="pfe_qty_${a.id}" value="${a.qty}" placeholder="수량" step="any"
+              style="width:100%;padding:6px 8px;border:1.5px solid var(--border2);border-radius:7px;background:var(--bg2);color:var(--text);font-size:12px;font-family:inherit;outline:none;-moz-appearance:textfield">
+          </div>
+        </div>
+        <div style="margin-bottom:6px">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:3px">메모</div>
+          <input type="text" id="pfe_memo_${a.id}" value="${a.memo||''}" placeholder="메모 (선택)"
+            style="width:100%;padding:6px 8px;border:1.5px solid var(--border2);border-radius:7px;background:var(--bg2);color:var(--text);font-size:12px;font-family:inherit;outline:none">
+        </div>
+        <button onclick="pfUpdateAsset(${a.id})" style="width:100%;padding:7px;background:var(--blue);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">💾 수정 저장</button>
+      </div>`;
     return`<div class="asset-row" id="pfa_${a.id}">
       <div class="ar-top" onclick="pfToggle(${a.id})">
         <div class="ar-ico ${a.type}">${a.ticker.slice(0,2)}</div>
@@ -1722,7 +1761,8 @@ function pfRenderAssets(){
         </div>
         ${pfAnalysisComment(a,d,tp,sl)}
         ${krUpdate}
-        <div style="margin-top:10px"><button onclick="pfDelAsset(${a.id})" class="btn danger sm">🗑 삭제</button></div>
+        ${editPanel}
+        <div style="margin-top:8px"><button onclick="pfDelAsset(${a.id})" class="btn danger sm">🗑 삭제</button></div>
       </div>
     </div>`;
   }).join('');
