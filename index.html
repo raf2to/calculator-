@@ -375,7 +375,14 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
 .log-verdict{font-size:11px;font-weight:700;min-width:72px;text-align:right}
 .log-verdict.great{color:var(--teal)}.log-verdict.ok{color:var(--blue)}.log-verdict.bad{color:var(--red)}
 
-/* MOBILE */
+/* CLICK HINT */
+.clickable{cursor:pointer;transition:transform .15s,box-shadow .15s}
+.clickable:hover{transform:translateY(-2px);box-shadow:0 6px 20px var(--shadow)}
+.clickable:active{transform:translateY(0)}
+.click-hint{font-size:10px;color:var(--text3);margin-top:4px;display:flex;align-items:center;gap:3px}
+.arrow-badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--bg4);color:var(--text2);font-size:11px;margin-left:auto}
+/* BACK BTN */
+#backBtn{display:none;align-items:center;justify-content:center}
 @media(max-width:480px){
   .dash-grid{grid-template-columns:1fr 1fr}
   .mg3{grid-template-columns:1fr 1fr}
@@ -420,10 +427,14 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
         <div style="font-size:11px;color:var(--text3);margin-top:5px">만 원 단위 입력 · 5000 = 5천만 원</div>
       </div>
       <div class="ob-field">
-        <label class="ob-label">목표 달성일</label>
-        <input type="month" class="ob-input" id="ob_targetDate">
+        <label class="ob-label">목표 달성일 <span class="ob-label-sub">년/월 선택</span></label>
+        <div style="display:flex;gap:8px">
+          <select class="ob-select" id="ob_targetYear" style="flex:1"></select>
+          <select class="ob-select" id="ob_targetMonth" style="flex:1"></select>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:5px">몇 년 몇 월까지 달성하고 싶은지 선택해요</div>
       </div>
-      <button class="ob-btn" onclick="obNext(1)">다음 →</button>
+      <button class="ob-btn" onclick="obNext(1)">다음 단계로 → (2/3)</button>
     </div>
 
     <!-- STEP 2: 현재 자산 -->
@@ -446,8 +457,8 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
         <input type="number" class="ob-input" id="ob_monthly" placeholder="예: 50 (50만 원)">
         <div style="font-size:11px;color:var(--text3);margin-top:4px">만 원 단위</div>
       </div>
-      <button class="ob-btn" onclick="obNext(2)">다음 →</button>
-      <button class="ob-btn secondary" onclick="obPrev(2)" style="margin-top:8px">← 이전</button>
+      <button class="ob-btn" onclick="obNext(2)">분석 결과 보기 → (3/3)</button>
+      <button class="ob-btn secondary" onclick="obPrev(2)" style="margin-top:8px">← 이전으로</button>
     </div>
 
     <!-- STEP 3: 결과 -->
@@ -468,17 +479,21 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
 
   <!-- TOP BAR -->
   <div class="topbar">
-    <div class="topbar-brand" onclick="showDashboard()">💰 <span id="topbarName">raf</span></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="tb-btn" id="backBtn" onclick="goBack()" style="display:none;padding:6px 10px;font-size:16px;border-radius:8px">←</button>
+      <div class="topbar-brand" onclick="goToDashboard()">💰 <span id="topbarName">raf</span></div>
+    </div>
     <div class="topbar-right">
-      <button class="tb-btn" onclick="goToDashboard()">🏠 홈</button>
+      <button class="tb-btn" onclick="goToDashboard()" style="background:var(--info-bg);border-color:var(--info-border);color:var(--blue);font-weight:700">🏠 홈</button>
+      <button class="tb-btn" onclick="quickAssets()" style="background:var(--good-bg);border-color:var(--good-border);color:var(--teal);font-weight:700">📊 내 자산</button>
       <button class="tb-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
     </div>
   </div>
 
   <!-- MAIN TABS -->
   <div class="main-tabs" id="mainTabs" style="display:none">
-    <button class="main-tab active" onclick="switchMain('asset',this)">📊 내 자산</button>
-    <button class="main-tab" onclick="switchMain('realestate',this)">🏠 부동산</button>
+    <button class="main-tab active" onclick="switchMain('asset',this)">📊 내 자산 →</button>
+    <button class="main-tab" onclick="switchMain('realestate',this)">🏠 부동산 →</button>
   </div>
 
   <!-- SUB TABS (자산) -->
@@ -524,17 +539,19 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
         </div>
         <!-- 요약 -->
         <div class="dash-grid">
-          <div class="dash-card blue" onclick="switchMain('asset');switchSub('invest')">
+          <div class="dash-card blue clickable" onclick="switchMain('asset');switchSub('invest')">
             <div class="dash-card-icon">🎯</div>
             <div class="dash-card-label">목표 달성까지</div>
             <div class="dash-card-val" id="dashRemain">-</div>
             <div class="dash-card-sub" id="dashTargetDate">-</div>
+            <div class="click-hint">탭해서 시뮬레이션 보기 →</div>
           </div>
-          <div class="dash-card teal" onclick="switchMain('asset');switchSub('portfolio')">
+          <div class="dash-card teal clickable" onclick="switchMain('asset');switchSub('portfolio')">
             <div class="dash-card-icon">📈</div>
             <div class="dash-card-label">포트폴리오 수익률</div>
             <div class="dash-card-val" id="dashPortPct">-</div>
             <div class="dash-card-sub" id="dashPortPnl">-</div>
+            <div class="click-hint">탭해서 포트폴리오 보기 →</div>
           </div>
           <div class="dash-card amber">
             <div class="dash-card-icon">💡</div>
@@ -542,21 +559,23 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
             <div class="dash-card-val" id="dashNeedRate">-</div>
             <div class="dash-card-sub">목표 달성 기준</div>
           </div>
-          <div class="dash-card" onclick="switchMain('asset');switchSub('monthlog')">
+          <div class="dash-card clickable" onclick="switchMain('asset');switchSub('monthlog')">
             <div class="dash-card-icon">📅</div>
             <div class="dash-card-label">이번 달 기록</div>
             <div class="dash-card-val" id="dashThisMonth">미기록</div>
-            <div class="dash-card-sub">탭해서 기록하기</div>
+            <div class="click-hint">탭해서 기록하기 →</div>
           </div>
         </div>
         <!-- 성취 배지 -->
         <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;letter-spacing:.04em;text-transform:uppercase">🏅 성취 배지</div>
         <div class="ach-row" id="achRow"></div>
         <!-- 보유 자산 미리보기 -->
-        <div class="card">
-          <div class="card-title ct-blue">📊 보유 자산</div>
-          <div id="dashAssets"><div style="text-align:center;padding:20px;font-size:12px;color:var(--text3)">포트폴리오 탭에서 자산을 추가해보세요</div></div>
-          <button class="btn primary sm" onclick="switchMain('asset');switchSub('portfolio')" style="margin-top:10px">자산 관리하기 →</button>
+        <div class="card clickable" onclick="switchMain('asset');switchSub('portfolio')" style="border-color:var(--info-border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div class="card-title ct-blue" style="margin-bottom:0">📊 보유 자산</div>
+            <span style="font-size:12px;font-weight:700;color:var(--blue);background:var(--info-bg);padding:4px 10px;border-radius:99px">관리하기 →</span>
+          </div>
+          <div id="dashAssets"><div style="text-align:center;padding:20px;font-size:12px;color:var(--text3)">포트폴리오 탭에서 자산을 추가해보세요<br><span style="color:var(--blue);font-weight:700">→ 탭해서 추가하기</span></div></div>
         </div>
         <!-- 인사이트 -->
         <div id="dashInsights"></div>
@@ -585,70 +604,49 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
           </div>
           <div class="mini-tabs" id="pfTypeTabs">
             <button class="mini-tab active" onclick="pfFilter('all',this)">전체</button>
-            <button class="mini-tab" onclick="pfFilter('coin',this)">🪙 코인</button>
             <button class="mini-tab" onclick="pfFilter('us',this)">🇺🇸 미국주식</button>
             <button class="mini-tab" onclick="pfFilter('kr',this)">🇰🇷 한국주식</button>
+            <button class="mini-tab" onclick="pfFilter('coin',this)">🪙 코인</button>
           </div>
           <div id="pfList"><div style="text-align:center;padding:24px;font-size:12px;color:var(--text3)">📭 아래에서 자산을 추가해보세요</div></div>
         </div>
         <!-- 자산 추가 -->
         <div class="card">
-          <div class="card-title">➕ 자산 추가</div>
+          <div class="card-title">➕ 자산 추가 <span style="font-size:11px;color:var(--text2);font-weight:400;text-transform:none;letter-spacing:0">탭 선택 후 검색하세요</span></div>
           <div class="mini-tabs" id="pfAddTabs">
-            <button class="mini-tab active" onclick="pfSwitchAdd('coin',this)">🪙 코인</button>
-            <button class="mini-tab" onclick="pfSwitchAdd('us',this)">🇺🇸 미국주식</button>
+            <button class="mini-tab active" onclick="pfSwitchAdd('us',this)">🇺🇸 미국주식</button>
             <button class="mini-tab" onclick="pfSwitchAdd('kr',this)">🇰🇷 한국주식</button>
+            <button class="mini-tab" onclick="pfSwitchAdd('coin',this)">🪙 코인</button>
           </div>
-          <!-- 코인 -->
-          <div id="pfAdd-coin" class="add-form">
-            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">🪙 코인 — 업비트 실시간</div>
-            <div class="irow">
-              <label class="af-label">코인 검색 *</label>
-              <div class="search-wrap">
-                <input class="search-inp" id="pa_c_s" placeholder="비트코인, BTC, 이더리움..." autocomplete="off" oninput="pfSearch('coin',this.value)" onkeydown="pfKey(event,'coin')">
-                <div class="search-drop" id="pa_c_d"></div>
-              </div>
-              <div class="sel-badge" id="pa_c_sel"></div>
-              <input type="hidden" id="pa_c_tk"><input type="hidden" id="pa_c_nm">
-            </div>
-            <div class="af-grid">
-              <div><label class="af-label">평균단가 (원) *</label><input type="number" class="af-input" id="pa_c_avg" placeholder="95000000"></div>
-              <div><label class="af-label">보유수량 *</label><input type="number" class="af-input" id="pa_c_qty" placeholder="0.01" step="any"></div>
-              <div><label class="af-label">익절 목표 (%)</label><input type="number" class="af-input" id="pa_c_tp" placeholder="20" value="20"></div>
-              <div><label class="af-label">손절 기준 (%)</label><input type="number" class="af-input" id="pa_c_sl" placeholder="10" value="10"></div>
-              <div><label class="af-label">메모</label><input type="text" class="af-input" id="pa_c_memo" placeholder="선택"></div>
-            </div>
-            <button class="btn primary sm" onclick="pfAddAsset('coin')">+ 추가</button>
-          </div>
-          <!-- 미국주식 -->
-          <div id="pfAdd-us" class="add-form" style="display:none">
+          <!-- 미국주식 (기본) -->
+          <div id="pfAdd-us" class="add-form">
             <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">🇺🇸 미국주식 — Yahoo Finance 15분 지연</div>
             <div class="irow">
-              <label class="af-label">종목 검색 *</label>
+              <label class="af-label">종목 검색 * <span style="font-weight:400;color:var(--text3)">이름 또는 티커 입력</span></label>
               <div class="search-wrap">
-                <input class="search-inp" id="pa_s_s" placeholder="애플, AAPL, 엔비디아..." autocomplete="off" oninput="pfSearch('us',this.value)" onkeydown="pfKey(event,'us')">
+                <input class="search-inp" id="pa_s_s" placeholder="예: 애플, AAPL, 테슬라, NVDA..." autocomplete="off" oninput="pfSearch('us',this.value)" onkeydown="pfKey(event,'us')">
                 <div class="search-drop" id="pa_s_d"></div>
               </div>
               <div class="sel-badge" id="pa_s_sel"></div>
               <input type="hidden" id="pa_s_tk"><input type="hidden" id="pa_s_nm">
             </div>
             <div class="af-grid">
-              <div><label class="af-label">단가 통화</label><select class="af-select" id="pa_s_cur"><option value="USD">달러($)</option><option value="KRW">원화(₩)</option></select></div>
+              <div><label class="af-label">단가 통화</label><select class="af-select" id="pa_s_cur"><option value="USD">달러($) — 증권사 앱에 달러로 표시</option><option value="KRW">원화(₩) — 환율 이미 적용된 경우</option></select></div>
               <div><label class="af-label">평균단가 *</label><input type="number" class="af-input" id="pa_s_avg" placeholder="200.50" step="any"></div>
               <div><label class="af-label">보유수량 *</label><input type="number" class="af-input" id="pa_s_qty" placeholder="5" step="any"></div>
               <div><label class="af-label">익절 목표 (%)</label><input type="number" class="af-input" id="pa_s_tp" placeholder="15" value="15"></div>
               <div><label class="af-label">손절 기준 (%)</label><input type="number" class="af-input" id="pa_s_sl" placeholder="8" value="8"></div>
               <div><label class="af-label">메모</label><input type="text" class="af-input" id="pa_s_memo" placeholder="선택"></div>
             </div>
-            <button class="btn primary sm" onclick="pfAddAsset('us')">+ 추가</button>
+            <button class="btn primary" onclick="pfAddAsset('us')" style="margin-top:4px">+ 미국주식 추가하기</button>
           </div>
           <!-- 한국주식 -->
           <div id="pfAdd-kr" class="add-form" style="display:none">
-            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">🇰🇷 한국주식 — 수동 입력</div>
+            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">🇰🇷 한국주식 — 수동 입력 (실시간 미지원)</div>
             <div class="irow">
-              <label class="af-label">종목 검색 *</label>
+              <label class="af-label">종목 검색 * <span style="font-weight:400;color:var(--text3)">종목명 입력</span></label>
               <div class="search-wrap">
-                <input class="search-inp" id="pa_k_s" placeholder="삼성전자, SK하이닉스..." autocomplete="off" oninput="pfSearch('kr',this.value)" onkeydown="pfKey(event,'kr')">
+                <input class="search-inp" id="pa_k_s" placeholder="예: 삼성전자, SK하이닉스..." autocomplete="off" oninput="pfSearch('kr',this.value)" onkeydown="pfKey(event,'kr')">
                 <div class="search-drop" id="pa_k_d"></div>
               </div>
               <div class="sel-badge" id="pa_k_sel"></div>
@@ -657,12 +655,33 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
             <div class="af-grid">
               <div><label class="af-label">평균단가 (원) *</label><input type="number" class="af-input" id="pa_k_avg" placeholder="58000"></div>
               <div><label class="af-label">보유수량 *</label><input type="number" class="af-input" id="pa_k_qty" placeholder="10" step="any"></div>
-              <div><label class="af-label">현재가 (원) *</label><input type="number" class="af-input" id="pa_k_cur" placeholder="직접 입력"></div>
+              <div><label class="af-label">현재가 (원) *</label><input type="number" class="af-input" id="pa_k_cur" placeholder="지금 주가 직접 입력"></div>
               <div><label class="af-label">익절 목표 (%)</label><input type="number" class="af-input" id="pa_k_tp" placeholder="15" value="15"></div>
               <div><label class="af-label">손절 기준 (%)</label><input type="number" class="af-input" id="pa_k_sl" placeholder="8" value="8"></div>
               <div><label class="af-label">메모</label><input type="text" class="af-input" id="pa_k_memo" placeholder="선택"></div>
             </div>
-            <button class="btn primary sm" onclick="pfAddAsset('kr')">+ 추가</button>
+            <button class="btn primary" onclick="pfAddAsset('kr')" style="margin-top:4px">+ 한국주식 추가하기</button>
+          </div>
+          <!-- 코인 -->
+          <div id="pfAdd-coin" class="add-form" style="display:none">
+            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">🪙 코인 — 업비트 실시간 시세</div>
+            <div class="irow">
+              <label class="af-label">코인 검색 * <span style="font-weight:400;color:var(--text3)">이름 또는 티커 입력</span></label>
+              <div class="search-wrap">
+                <input class="search-inp" id="pa_c_s" placeholder="예: 비트코인, BTC, 이더리움..." autocomplete="off" oninput="pfSearch('coin',this.value)" onkeydown="pfKey(event,'coin')">
+                <div class="search-drop" id="pa_c_d"></div>
+              </div>
+              <div class="sel-badge" id="pa_c_sel"></div>
+              <input type="hidden" id="pa_c_tk"><input type="hidden" id="pa_c_nm">
+            </div>
+            <div class="af-grid">
+              <div><label class="af-label">평균단가 (원) *</label><input type="number" class="af-input" id="pa_c_avg" placeholder="예: 95000000"></div>
+              <div><label class="af-label">보유수량 *</label><input type="number" class="af-input" id="pa_c_qty" placeholder="예: 0.01" step="any"></div>
+              <div><label class="af-label">익절 목표 (%)</label><input type="number" class="af-input" id="pa_c_tp" placeholder="20" value="20"></div>
+              <div><label class="af-label">손절 기준 (%)</label><input type="number" class="af-input" id="pa_c_sl" placeholder="10" value="10"></div>
+              <div><label class="af-label">메모</label><input type="text" class="af-input" id="pa_c_memo" placeholder="선택"></div>
+            </div>
+            <button class="btn primary" onclick="pfAddAsset('coin')" style="margin-top:4px">+ 코인 추가하기</button>
           </div>
         </div>
         <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:4px">💾 모든 데이터 자동저장 · <button onclick="pfExport()" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:11px;font-weight:700;font-family:inherit">JSON 백업</button></div>
@@ -684,8 +703,8 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);colo
             </div>
           </div>
           <div class="irow">
-            <label class="ilab">목표 달성일</label>
-            <input type="month" class="isel" id="goalDate" oninput="calcInvest();appSave()">
+            <label class="ilab">목표 달성일 <span class="ilab-sub">년/월 선택</span></label>
+            <div id="goalDateWrap" style="display:flex;gap:8px;flex:1"></div>
           </div>
           <div class="irow">
             <label class="ilab">월 추가 납입 <span class="ilab-sub">만 원</span></label>
@@ -917,10 +936,11 @@ function obNext(step){
   if(step===1){
     const name=document.getElementById('ob_name').value.trim();
     const goal=parseFloat(document.getElementById('ob_goal').value);
-    const td=document.getElementById('ob_targetDate').value;
+    const yr=document.getElementById('ob_targetYear').value;
+    const mo=document.getElementById('ob_targetMonth').value;
     if(!name){alert('이름을 입력해주세요!');return;}
     if(!goal||goal<=0){alert('목표금액을 입력해주세요!');return;}
-    S.name=name;S.goal=goal*10000;S.targetDate=td;save();
+    S.name=name;S.goal=goal*10000;S.targetDate=yr&&mo?yr+'-'+mo.padStart(2,'0'):'';save();
     goStep(2);
   } else if(step===2){
     S.saving=(parseFloat(document.getElementById('ob_saving').value)||0)*10000;
@@ -984,38 +1004,56 @@ function startApp(){
   initApp();
 }
 
-/* ===================== APP NAV ===================== */
-let curMain='dashboard', curSub='portfolio';
+/* ===================== 뒤로가기 & 빠른 접근 ===================== */
+let navHistory=[];
+function pushNav(state){navHistory.push(state);document.getElementById('backBtn').style.display='flex';}
+function goBack(){
+  if(navHistory.length<=1){goToDashboard();return;}
+  navHistory.pop();
+  const prev=navHistory[navHistory.length-1];
+  if(!prev){goToDashboard();return;}
+  if(prev.type==='dashboard'){goToDashboard();return;}
+  if(prev.type==='main'){switchMain(prev.main);if(prev.sub)switchSub(prev.sub);}
+  if(navHistory.length<=1)document.getElementById('backBtn').style.display='none';
+}
+function quickAssets(){
+  pushNav({type:'main',main:'asset',sub:'portfolio'});
+  switchMain('asset');switchSub('portfolio');
+}
+
+/* ===================== APP NAV (수정) ===================== */
 function goToDashboard(){
   document.getElementById('mainTabs').style.display='none';
   document.getElementById('assetSubTabs').style.display='none';
   document.getElementById('realSubTabs').style.display='none';
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.getElementById('sec-dashboard').classList.add('active');
-  curMain='dashboard';
+  document.getElementById('backBtn').style.display='none';
+  curMain='dashboard';navHistory=[{type:'dashboard'}];
   updateDashboard();
 }
-function switchMain(tab, btn){
+function switchMain(tab,btn){
   curMain=tab;
   document.querySelectorAll('.main-tab').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  else{const b=document.querySelector(`.main-tab[onclick*="${tab}"]`);if(b)b.classList.add('active');}
+  if(btn)btn.classList.add('active');
+  else{const b=document.querySelector(`.main-tab[onclick*="'${tab}'"]`);if(b)b.classList.add('active');}
   document.getElementById('mainTabs').style.display='flex';
   document.getElementById('assetSubTabs').style.display=tab==='asset'?'flex':'none';
   document.getElementById('realSubTabs').style.display=tab==='realestate'?'flex':'none';
-  if(tab==='asset') switchSub('portfolio');
-  else switchSub('mortgage');
+  document.getElementById('backBtn').style.display='flex';
+  if(tab==='asset'){switchSub('portfolio');}
+  else{switchSub('mortgage');}
 }
-function switchSub(id, btn){
+function switchSub(id,btn){
   curSub=id;
   document.querySelectorAll('#assetSubTabs .sub-tab,#realSubTabs .sub-tab').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  else{const b=document.querySelector(`.sub-tab[onclick*="${id}"]`);if(b)b.classList.add('active');}
+  if(btn)btn.classList.add('active');
+  else{const b=document.querySelector(`.sub-tab[onclick*="'${id}'"]`);if(b)b.classList.add('active');}
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.getElementById('sec-'+id).classList.add('active');
-  if(id==='invest') updateInvestInsight();
-  if(id==='monthlog') renderLogs();
-  if(id==='portfolio') pfRenderAssets();
+  if(id==='invest')updateInvestInsight();
+  if(id==='monthlog')renderLogs();
+  if(id==='portfolio')pfRenderAssets();
 }
 function showDashboard(){goToDashboard();}
 
@@ -1148,15 +1186,19 @@ const US_DB=[
   {t:'VZ',n:'버라이즌',k:'verizon'},
   {t:'TMUS',n:'T모바일',k:'t-mobile tmus'},
   {t:'NUAN',n:'뉘앙스커뮤니케이션',k:'nuance'},
-  // 빅4 클라우드 ETF
+  // 빅4 클라우드 ETF + 레버리지/배당/테마
   {t:'SPY',n:'S&P500 ETF',k:'spdr s&p500 etf spy'},
   {t:'QQQ',n:'나스닥100 ETF',k:'invesco qqq nasdaq'},
+  {t:'TQQQ',n:'나스닥3배 레버리지',k:'나스닥 레버리지 tqqq proshares'},
+  {t:'SCHD',n:'슈왑 배당 ETF',k:'schd schwab dividend 배당 etf'},
   {t:'IWM',n:'러셀2000 ETF',k:'russell 2000 iwm'},
   {t:'VOO',n:'뱅가드 S&P500',k:'vanguard voo'},
   {t:'VTI',n:'뱅가드 전체시장',k:'vanguard total vti'},
   {t:'ARKK',n:'ARK 이노베이션',k:'ark cathie wood arkk'},
   {t:'ARKG',n:'ARK 게노믹스',k:'ark genomic arkg'},
   {t:'ARKF',n:'ARK 핀테크',k:'ark fintech arkf'},
+  {t:'URA',n:'우라늄 ETF',k:'우라늄 ura uranium global x'},
+  {t:'ETHU',n:'이더리움 ETF(2x 레버리지)',k:'이더리움 레버리지 ethu ethereum'},
   {t:'GLD',n:'금 ETF',k:'gold gld'},
   {t:'SLV',n:'은 ETF',k:'silver slv'},
   {t:'USO',n:'원유 ETF',k:'oil uso'},
@@ -1348,7 +1390,36 @@ function pfExport(){const b=new Blob([JSON.stringify({assets:S.pfAssets,logs:S.p
 /* 시세 */
 async function pfFetchFX(){try{const r=await fetch('https://open.er-api.com/v6/latest/USD');if(!r.ok)throw 0;const d=await r.json();pfUSDKRW=d.rates.KRW;S.usdKrw=pfUSDKRW;save();document.getElementById('pfFxTxt').textContent='$1 = '+(pfUSDKRW|0).toLocaleString()+'원';}catch(e){document.getElementById('pfFxTxt').textContent='$1 ≈ '+(pfUSDKRW|0).toLocaleString()+'원 (기본값)';}}
 async function pfFetchCoins(){const coins=S.pfAssets.filter(a=>a.type==='coin');if(!coins.length)return;const tks=[...new Set(coins.map(a=>'KRW-'+a.ticker))].join(',');try{const r=await fetch('https://api.upbit.com/v1/ticker?markets='+tks);if(!r.ok)throw 0;const data=await r.json();data.forEach(d=>{const tk=d.market.replace('KRW-','');pfPrices[tk]={price:d.trade_price,change:d.change_rate*100,dir:d.change,high:d.high_price,low:d.low_price};});}catch(e){}}
-async function pfFetchUS(){const us=S.pfAssets.filter(a=>a.type==='us');if(!us.length)return;for(const a of us){try{const url='https://query1.finance.yahoo.com/v8/finance/chart/'+a.ticker+'?interval=1d&range=2d';const proxy='https://api.allorigins.win/get?url='+encodeURIComponent(url);const r=await fetch(proxy);if(!r.ok)throw 0;const w=await r.json();const d=JSON.parse(w.contents);const meta=d?.chart?.result?.[0]?.meta;if(!meta)throw 0;const cur=meta.regularMarketPrice,prev=meta.chartPreviousClose||meta.previousClose;pfPrices[a.ticker]={price:cur,priceKRW:cur*pfUSDKRW,change:prev?((cur-prev)/prev*100):0,dir:cur>=(prev||cur)?'RISE':'FALL'};}catch(e){}}}
+
+/* US 시세: 병렬 fetch로 버그 수정 — 순차 호출 시 두번째부터 실패하는 문제 해결 */
+async function pfFetchOne(ticker){
+  const proxies=[
+    `https://api.allorigins.win/get?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/'+ticker+'?interval=1d&range=2d')}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/'+ticker+'?interval=1d&range=2d')}`,
+  ];
+  for(const proxy of proxies){
+    try{
+      const r=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
+      if(!r.ok)continue;
+      const w=await r.json();
+      const raw=typeof w==='string'?w:(w.contents||JSON.stringify(w));
+      const d=JSON.parse(raw);
+      const meta=d?.chart?.result?.[0]?.meta;if(!meta)continue;
+      const cur=meta.regularMarketPrice,prev=meta.chartPreviousClose||meta.previousClose||meta.regularMarketPreviousClose;
+      pfPrices[ticker]={price:cur,priceKRW:cur*pfUSDKRW,change:prev&&prev>0?((cur-prev)/prev*100):0,dir:cur>=(prev||cur)?'RISE':'FALL'};
+      return;
+    }catch(e){}
+  }
+}
+async function pfFetchUS(){
+  const us=S.pfAssets.filter(a=>a.type==='us');if(!us.length)return;
+  const tickers=[...new Set(us.map(a=>a.ticker))];
+  // 병렬 처리 (3개씩 배치)
+  for(let i=0;i<tickers.length;i+=3){
+    const batch=tickers.slice(i,i+3);
+    await Promise.allSettled(batch.map(tk=>pfFetchOne(tk)));
+  }
+}
 function pfSetStatus(type,txt){const pill=document.getElementById('pfPill');const dot=document.getElementById('pfDot');if(!pill)return;pill.className='status-pill '+type;dot.className='spd '+type;document.getElementById('pfTxt').textContent=txt;}
 async function pfRefreshAll(){pfSetStatus('loading','업데이트중...');await pfFetchFX();await pfFetchCoins();await pfFetchUS();pfRenderAssets();pfCalcSummary();updateDashboard();pfSetStatus('live',new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+'업데이트');pfCd=600;}
 function pfStartTimer(){if(pfTimer)clearInterval(pfTimer);pfTimer=setInterval(()=>{pfCd--;const m=Math.floor(pfCd/60),s=pfCd%60;const el=document.getElementById('pfNext');if(el)el.textContent=`갱신 ${m}:${s.toString().padStart(2,'0')}`;if(pfCd<=0)pfRefreshAll();},1000);}
@@ -1379,7 +1450,7 @@ function pfCalcSummary(){
 
 /* 자산 렌더 */
 function pfFilter(type,btn){pfTypeF=type;document.querySelectorAll('#pfTypeTabs .mini-tab').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');pfRenderAssets();}
-function pfSwitchAdd(type,btn){pfAddT=type;document.getElementById('pfAddTabs').querySelectorAll('.mini-tab').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');['coin','us','kr'].forEach(t=>document.getElementById('pfAdd-'+t).style.display=t===type?'block':'none');}
+function pfSwitchAdd(type,btn){pfAddT=type;document.getElementById('pfAddTabs').querySelectorAll('.mini-tab').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');['coin','us','kr'].forEach(t=>{const el=document.getElementById('pfAdd-'+t);if(el)el.style.display=t===type?'block':'none';});}
 function pfToggle(id){const det=document.getElementById('pfd_'+id);const chv=document.getElementById('pfc_'+id);if(!det)return;const op=det.classList.contains('show');det.classList.toggle('show',!op);if(chv)chv.classList.toggle('open',!op);document.getElementById('pfa_'+id)?.classList.toggle('expanded',!op);}
 function pfUpdateKR(id){const a=S.pfAssets.find(x=>x.id===id);if(!a)return;const v=parseFloat(document.getElementById('pfku_'+id)?.value);if(isNaN(v)||v<=0){alert('현재가를 입력해주세요.');return;}a.currentPrice=v;pfSave();pfRenderAssets();pfCalcSummary();updateDashboard();}
 function pfDelAsset(id){if(!confirm('삭제할까요?'))return;S.pfAssets=S.pfAssets.filter(a=>a.id!==id);pfSave();pfRenderAssets();pfCalcSummary();updateDashboard();}
@@ -1501,7 +1572,10 @@ function calcMonthsToGoal(curEval,monthly,goal){
 }
 function calcNeedMonthly(curEval,monthly,goal){
   if(!goal||curEval>=goal)return 0;
-  const months=S.targetDate?Math.max(1,(new Date(S.targetDate+'-01').getFullYear()-new Date().getFullYear())*12+(new Date(S.targetDate+'-01').getMonth()-new Date().getMonth())):60;
+  const td=S.targetDate;
+  if(!td)return null;
+  const now=new Date(),target=new Date(td+'-01');
+  const months=Math.max(1,(target.getFullYear()-now.getFullYear())*12+(target.getMonth()-now.getMonth()));
   function fv(r){return Math.abs(r)<0.000001?curEval+monthly*months:curEval*Math.pow(1+r,months)+monthly*(Math.pow(1+r,months)-1)/r;}
   let lo=-0.5,hi=5;if(fv(hi)<goal)return null;
   for(let i=0;i<100;i++){const mid=(lo+hi)/2;if(fv(mid)<goal)lo=mid;else hi=mid;if(hi-lo<0.000001)break;}
@@ -1519,9 +1593,17 @@ function calcInvest(){
 
   document.getElementById('pbGoal').textContent=fmtW(goal);
 
-  // 포트폴리오 총액 가져오기
-  let pfTotal=0,pfCost=0;S.pfAssets.forEach(a=>{const d=pfGetData(a);pfTotal+=d.evalKRW>0?d.evalKRW:d.costKRW;pfCost+=d.costKRW;});
-  const curTotal=depBal+pfTotal;
+  // 포트폴리오 총액 가져오기 (코인+미국주식+한국주식 전체)
+  let pfTotal=0,pfCost=0;
+  S.pfAssets.forEach(a=>{
+    const d=pfGetData(a);
+    // evalKRW가 0이면(시세 미로드) costKRW(매수원금)으로 대체
+    pfTotal+=d.evalKRW>0?d.evalKRW:d.costKRW;
+    pfCost+=d.costKRW;
+  });
+  // ob단계에서 입력한 stock도 포트폴리오에 아직 미입력 시 반영
+  const obStock=S.pfAssets.length===0?(S.stock||0):0;
+  const curTotal=depBal+pfTotal+obStock;
 
   // 달성 기간 계산
   let dep=depBal,addDep=0;const dA=[dep],mos=[0];
@@ -1820,12 +1902,48 @@ async function runAI(){
 
 /* ===================== INIT ===================== */
 function appSave(){save();}
+
+/* 한국어 날짜 선택기 초기화 */
+function initDateSelects(){
+  const now=new Date();
+  const cy=now.getFullYear(),cm=now.getMonth()+1;
+  // 온보딩 년도
+  const yrSel=document.getElementById('ob_targetYear');
+  const moSel=document.getElementById('ob_targetMonth');
+  if(yrSel&&!yrSel.options.length){
+    for(let y=cy;y<=cy+20;y++){const o=document.createElement('option');o.value=y;o.text=y+'년';yrSel.appendChild(o);}
+    yrSel.value=cy+3;
+  }
+  if(moSel&&!moSel.options.length){
+    for(let m=1;m<=12;m++){const o=document.createElement('option');o.value=String(m).padStart(2,'0');o.text=m+'월';moSel.appendChild(o);}
+    moSel.value=String(cm).padStart(2,'0');
+  }
+  // 목표·시뮬레이션 달성일 (select 방식)
+  const gdWrap=document.getElementById('goalDateWrap');
+  if(gdWrap&&!document.getElementById('goalDateY')){
+    gdWrap.innerHTML=`<select id="goalDateY" class="isel" style="flex:1" onchange="onGoalDateChange()"></select>
+    <select id="goalDateM" class="isel" style="flex:0 0 90px" onchange="onGoalDateChange()"></select>`;
+    const gy=document.getElementById('goalDateY'),gm=document.getElementById('goalDateM');
+    for(let y=cy;y<=cy+30;y++){const o=document.createElement('option');o.value=y;o.text=y+'년';gy.appendChild(o);}
+    for(let m=1;m<=12;m++){const o=document.createElement('option');o.value=String(m).padStart(2,'0');o.text=m+'월';gm.appendChild(o);}
+    if(S.targetDate){const[ty,tm]=S.targetDate.split('-');gy.value=ty;gm.value=tm;}
+    else{gy.value=cy+3;gm.value=String(cm).padStart(2,'0');}
+  }
+}
+function onGoalDateChange(){
+  const y=document.getElementById('goalDateY')?.value;
+  const m=document.getElementById('goalDateM')?.value;
+  if(y&&m){S.targetDate=y+'-'+m;save();calcInvest();}
+}
 function initApp(){
   document.getElementById('topbarName').textContent=S.name||'투자자';
+  curMain='dashboard';curSub='portfolio';navHistory=[{type:'dashboard'}];
+
+  // 날짜 선택기 초기화
+  initDateSelects();
 
   // 저장된 데이터 복원
   if(S.goal){const el=document.getElementById('goal');if(el){el.value=S.goal;syncST('goal','goalT',1);}}
-  if(S.targetDate){const el=document.getElementById('goalDate');if(el)el.value=S.targetDate;}
   if(S.monthly){const el=document.getElementById('monthlyAdd');if(el){el.value=S.monthly;syncST('monthlyAdd','monthlyAddT',1);}}
   if(S.saving){const el=document.getElementById('depBal');if(el){el.value=S.saving;syncST('depBal','depBalT',1);}}
 
@@ -1838,32 +1956,29 @@ function initApp(){
   const ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
   const lm=document.getElementById('log_month');if(lm)lm.value=ym;
 
-  // 포트폴리오 초기화
-  pfRenderAssets();
-  pfCalcSummary();
+  // 포트폴리오 초기화 — 기본 탭: 미국주식
+  pfRenderAssets();pfCalcSummary();
+  // us 탭 기본 표시
+  ['coin','us','kr'].forEach(t=>{const el=document.getElementById('pfAdd-'+t);if(el)el.style.display=t==='us'?'block':'none';});
 
-  // 차트 calc
-  setTimeout(()=>{calcInvest();calcSub();},200);
+  // 차트
+  setTimeout(()=>{calcInvest();calcSub();},300);
 
   // 시세 로드
-  pfRefreshAll();
-  pfStartTimer();
+  pfRefreshAll();pfStartTimer();
 
   // 대시보드
-  updateDashboard();
-  updateAchievements();
-  checkAchievements();
+  updateDashboard();updateAchievements();checkAchievements();
 
-  // 슬라이더 초기 텍스트 동기화
+  // 슬라이더 텍스트 동기화
   syncST('price','priceT',1);syncST('mincome','mincomeT',1);syncST('existDebt','existDebtT',1);
   syncST('c_jeonse','c_jeonseT',1);syncST('c_mbond','c_mbondT',1);syncST('c_mbond2','c_mbond2T',1);syncST('c_monthly','c_monthlyT',1);
 
-  // 입력값 저장 이벤트
-  ['goal','goalDate','monthlyAdd','expectedRate','depBal','dm','dr','region','price','ownership','purpose','mincome','existDebt','term','repayType','sub1','sub2','sub3','c_jeonse','c_mbond','c_rate','c_mbond2','c_monthly','c_rate2'].forEach(id=>{
+  // 입력값 저장
+  ['goal','monthlyAdd','expectedRate','depBal','dm','dr','region','price','ownership','purpose','mincome','existDebt','term','repayType','sub1','sub2','sub3','c_jeonse','c_mbond','c_rate','c_mbond2','c_monthly','c_rate2'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
     el.addEventListener('input',()=>{
       if(id==='goal')S.goal=+el.value;
-      if(id==='goalDate')S.targetDate=el.value;
       if(id==='monthlyAdd')S.monthly=+el.value;
       if(id==='depBal')S.saving=+el.value;
       save();
@@ -1872,6 +1987,22 @@ function initApp(){
 }
 
 /* 앱 시작 */
+// 온보딩 날짜 select 항상 초기화
+(function initObDate(){
+  const now=new Date();
+  const cy=now.getFullYear(),cm=now.getMonth()+1;
+  const yrSel=document.getElementById('ob_targetYear');
+  const moSel=document.getElementById('ob_targetMonth');
+  if(yrSel){
+    for(let y=cy;y<=cy+20;y++){const o=document.createElement('option');o.value=y;o.text=y+'년';yrSel.appendChild(o);}
+    yrSel.value=cy+3;
+  }
+  if(moSel){
+    for(let m=1;m<=12;m++){const o=document.createElement('option');o.value=String(m).padStart(2,'0');o.text=m+'월';moSel.appendChild(o);}
+    moSel.value=String(cm).padStart(2,'0');
+  }
+})();
+
 if(S.obDone){
   document.getElementById('onboarding').classList.add('hidden');
   document.getElementById('app').style.display='flex';
